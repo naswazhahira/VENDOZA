@@ -1,5 +1,6 @@
 package Produk;
 
+// ENCAPSULATION
 public class ProdukVendoza {
     private String nama;
     private double harga;
@@ -11,6 +12,7 @@ public class ProdukVendoza {
         setStok(stok);
     }
 
+    // ENCAPSULATION (Getter & Setter)
     public String getNama(){
         return nama;
     }
@@ -42,6 +44,13 @@ public class ProdukVendoza {
         this.stok -= jumlah;
     }
 
+    // Untuk mengembalikan stok saat barang dihapus dari keranjang/batal beli
+    public void tambahStok(int jumlah) {
+        if (jumlah <= 0) throw new IllegalArgumentException("Jumlah penambahan stok harus lebih dari 0!");
+        this.stok += jumlah;
+    }
+
+    //POLYMORPHISM (OVERRIDING)
     @Override
     public String toString() {
         return String.format("%-22s | Rp %,.0f | Stok: %d", nama, harga, stok);

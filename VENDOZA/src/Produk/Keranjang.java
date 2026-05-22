@@ -68,7 +68,7 @@ public class Keranjang {
 
     // Akan dihapus setelah masuk ke bagian backend
     public void tampilKeranjang() {
-        System.out.println("\n===== ISI KERANJANG =====");
+        System.out.println("\nISI KERANJANG");
         if (items.isEmpty()) {
             System.out.println("  (Keranjang kosong)");
         } else {
@@ -76,6 +76,5 @@ public class Keranjang {
             items.forEach(System.out::println);
         }
         System.out.printf("  Total : Rp %,.0f%n", getTotal());
-        System.out.println("=========================");
     }
 }

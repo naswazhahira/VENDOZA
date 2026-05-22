@@ -9,13 +9,16 @@ import java.util.List;
 
 public class Order {
     private static int counter = 1;
+
+    // ENCAPSULATION — semua field private, tidak bisa diakses langsung dari luar class
     private int orderId;
     private Customer customer;
     private List<ItemKeranjang> items;
     private double total;
     private String status;
-    private Payment metodePembayaran;
+    private Payment metodePembayaran; // INTERFACE
 
+    // Constructor (saat orderan dibuat)
     public Order(Customer customer, Keranjang keranjang, Payment metodePembayaran) {
         this.orderId          = counter++;
         this.customer         = customer;
@@ -24,7 +27,6 @@ public class Order {
         this.metodePembayaran = metodePembayaran;
         this.status           = "MENUNGGU_PEMBAYARAN";
 
-        // Kurangi stok setiap produk yang dibeli
         for (ItemKeranjang item : items) {
             item.getProduk().kurangiStok(item.getJumlah());
         }
@@ -36,8 +38,7 @@ public class Order {
         items.forEach(System.out::println);
         System.out.printf("Total    : Rp %,.0f%n%n", total);
 
-        // Polymorphism: bayar() & konfirmasi() dipanggil seragam,
-        // tapi perilakunya beda tergantung jenis Payment (Transfer / COD)
+        // POLYMORPHISM — bayar() dan konfirmasi() dipanggil dengan cara yang sama
         metodePembayaran.bayar(total);
         metodePembayaran.konfirmasi();
 
@@ -56,6 +57,12 @@ public class Order {
         System.out.println("Status   : " + status);
     }
 
-    public int    getOrderId() { return orderId; }
-    public String getStatus()  { return status; }
+    // ENCAPSULATION — field private diakses lewat getter, tidak bisa diubah sembarangan
+    public int    getOrderId() {
+        return orderId;
+    }
+
+    public String getStatus()  {
+        return status;
+    }
 }

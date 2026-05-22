@@ -19,7 +19,7 @@ public class MainClass {
     static List<ProdukVendoza> daftarProduk = new ArrayList<>();
 
     public static void main(String[] args) {
-        // Data produk awal (bisa kamu tambah)
+        // Data produk awal
         daftarProduk.add(new ProdukVendoza("Laptop ASUS VivoBook", 8_500_000, 10));
         daftarProduk.add(new ProdukVendoza("Mouse Logitech M235", 150_000, 50));
         daftarProduk.add(new ProdukVendoza("Tas Ransel Pria", 275_000, 20));
@@ -31,7 +31,7 @@ public class MainClass {
         auth.register(new Customer("Budi", "budi@email.com", "pass123", "Jl. Merdeka No.5"));
 
         // Login
-        System.out.println("===== LOGIN =====");
+        System.out.println(" LOGIN ");
         System.out.print("Email    : ");
         String email = scanner.nextLine();
         System.out.print("Password : ");
@@ -48,11 +48,11 @@ public class MainClass {
         }
     }
 
-    // ── MENU ADMIN ───────────────────────────────────────────
+    // MENU ADMIN 
     static void menuAdmin(Admin admin) {
         boolean aktif = true;
         while (aktif) {
-            System.out.println("\n===== MENU ADMIN =====");
+            System.out.println("\n MENU ADMIN ");
             System.out.println("1. Lihat semua produk");
             System.out.println("2. Tambah produk baru");
             System.out.println("0. Keluar");
@@ -78,7 +78,7 @@ public class MainClass {
         }
     }
 
-    // ── MENU CUSTOMER ────────────────────────────────────────
+    // MENU CUSTOMER 
     static void menuCustomer(Customer customer) {
         Keranjang keranjang = new Keranjang();
         boolean belanja = true;
@@ -121,7 +121,7 @@ public class MainClass {
         order.cekTracking();
     }
 
-    // ── HELPER INPUT ─────────────────────────────────────────
+    // HELPER INPUT
     static int inputAngka(String prompt) {
         while (true) {
             try {

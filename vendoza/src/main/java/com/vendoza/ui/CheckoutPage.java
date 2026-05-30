@@ -5,6 +5,7 @@ import com.vendoza.model.Order;
 import com.vendoza.model.User;
 import com.vendoza.service.AuthService;
 import com.vendoza.service.CartService;
+import javafx.animation.ScaleTransition;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.binding.Bindings;
@@ -13,8 +14,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -39,9 +43,12 @@ public class CheckoutPage {
 
         VBox mainContent = new VBox(20);
         mainContent.setPadding(new Insets(20, 40, 40, 40));
+        mainContent.setStyle("-fx-background-color: #E8DCD0;");
 
-        Text title = new Text("Checkout");
-        title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-fill: " + Styles.BROWN_DARK + ";");
+        Text title = new Text("🛒 Checkout");
+        title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-fill: " + Styles.BROWN_DARK + ";" +
+                "-fx-border-color: " + Styles.GOLD + ";" +
+                "-fx-border-width: 0 0 3 0; -fx-padding: 0 0 10 0;");
 
         HBox contentLayout = new HBox(30);
         contentLayout.setAlignment(Pos.TOP_LEFT);
@@ -50,12 +57,13 @@ public class CheckoutPage {
         VBox leftPanel = new VBox(15);
         leftPanel.setPrefWidth(600);
 
-        Label itemsLabel = new Label("Your Items");
+        Label itemsLabel = new Label("📦 Your Items");
         itemsLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
 
         itemsContainer = new VBox(10);
         itemsContainer.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
-                "-fx-background-radius: 15; -fx-padding: 15;");
+                "-fx-background-radius: 15; -fx-padding: 15;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
 
         refreshItemsContainer();
 
@@ -65,7 +73,7 @@ public class CheckoutPage {
         VBox rightPanel = new VBox(15);
         rightPanel.setPrefWidth(400);
 
-        Label shippingLabel = new Label("Shipping Information");
+        Label shippingLabel = new Label("🚚 Shipping Information");
         shippingLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
 
         // Shipping Address
@@ -74,7 +82,6 @@ public class CheckoutPage {
         addressArea.setStyle(Styles.textFieldStyle());
         addressArea.setPrefHeight(80);
 
-        // Pre-fill address if available
         User currentUser = AuthService.getCurrentUser();
         if (currentUser != null && currentUser.getAddress() != null && !currentUser.getAddress().isEmpty()) {
             addressArea.setText(currentUser.getAddress());
@@ -84,8 +91,8 @@ public class CheckoutPage {
         addressError.setStyle("-fx-text-fill: " + Styles.ERROR_RED + "; -fx-font-size: 12px;");
 
         // Shipping Method
-        Label methodLabel = new Label("Shipping Method");
-        methodLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        Label methodLabel = new Label("📬 Shipping Method");
+        methodLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + Styles.TEXT_DARK + ";");
 
         shippingCombo = new ComboBox<>(FXCollections.observableArrayList(
                 "Regular (3-5 days) - Rp 15.000",
@@ -99,7 +106,7 @@ public class CheckoutPage {
 
         // Payment Method
         Label paymentLabel = new Label("💳 Payment Method");
-        paymentLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        paymentLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + Styles.TEXT_DARK + ";");
 
         paymentCombo = new ComboBox<>(FXCollections.observableArrayList(
                 "Bank Transfer (BCA/Mandiri/BNI)",
@@ -128,32 +135,45 @@ public class CheckoutPage {
         summaryBox.getChildren().addAll(subtotalText, shippingCostLabel, new Separator(), totalLabel);
 
         // Buttons
-        Button placeOrderBtn = new Button("Place Order ✓");
+        Button placeOrderBtn = new Button("✅ Place Order");
         placeOrderBtn.setStyle(Styles.buttonStyle());
-        placeOrderBtn.setOnMouseEntered(e -> placeOrderBtn.setStyle(Styles.buttonHoverStyle()));
-        placeOrderBtn.setOnMouseExited(e -> placeOrderBtn.setStyle(Styles.buttonStyle()));
+        placeOrderBtn.setMaxWidth(Double.MAX_VALUE);
+        placeOrderBtn.setOnMouseEntered(e -> {
+            placeOrderBtn.setStyle(Styles.buttonHoverStyle());
+            ScaleTransition st = new ScaleTransition(Duration.millis(150), placeOrderBtn);
+            st.setToX(1.02);
+            st.setToY(1.02);
+            st.play();
+        });
+        placeOrderBtn.setOnMouseExited(e -> {
+            placeOrderBtn.setStyle(Styles.buttonStyle());
+            ScaleTransition st = new ScaleTransition(Duration.millis(150), placeOrderBtn);
+            st.setToX(1);
+            st.setToY(1);
+            st.play();
+        });
         placeOrderBtn.setOnAction(e -> placeOrder());
 
-        Button backBtn = new Button("← Back to Cart");
-        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_MEDIUM + ";" +
-                "-fx-underline: true; -fx-cursor: hand;");
-        backBtn.setOnAction(e -> SceneManager.setScene(new CartPage().getScene()));
-
-        rightPanel.getChildren().addAll(shippingLabel, addressArea, addressError, methodLabel, shippingCombo,
-                paymentLabel, paymentCombo, summaryBox, placeOrderBtn, backBtn);
+        rightPanel.getChildren().addAll(shippingLabel, addressArea, addressError,
+                methodLabel, shippingCombo, paymentLabel, paymentCombo, summaryBox, placeOrderBtn);
 
         contentLayout.getChildren().addAll(leftPanel, rightPanel);
+        HBox.setHgrow(rightPanel, Priority.ALWAYS);
+        HBox.setHgrow(leftPanel, Priority.ALWAYS);
+
         mainContent.getChildren().addAll(title, contentLayout);
 
         ScrollPane scrollPane = new ScrollPane(mainContent);
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: " + Styles.BROWN_PALE + ";");
+        scrollPane.setStyle("-fx-background-color: #E8DCD0; -fx-background: #E8DCD0;");
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setBorder(Border.EMPTY);
 
         VBox root = new VBox(navBar, scrollPane);
-        root.setStyle("-fx-background-color: " + Styles.BROWN_PALE + ";");
+        root.setStyle("-fx-background-color: #E8DCD0;");
 
-        return new Scene(root, 1200, 700);
+        Scene scene = new Scene(root, 1200, 700);
+        return scene;
     }
 
     private void refreshItemsContainer() {
@@ -162,8 +182,11 @@ public class CheckoutPage {
         itemsContainer.getChildren().clear();
 
         if (CartService.getCartItemCount() == 0) {
-            Label emptyLabel = new Label("Your cart is empty");
-            emptyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: " + Styles.TEXT_LIGHT + ";");
+            Label emptyLabel = new Label("🛒 Your cart is empty");
+            emptyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: " + Styles.TEXT_LIGHT + ";" +
+                    "-fx-padding: 30 0;");
+            emptyLabel.setAlignment(Pos.CENTER);
+            emptyLabel.setMaxWidth(Double.MAX_VALUE);
             itemsContainer.getChildren().add(emptyLabel);
             return;
         }
@@ -177,7 +200,7 @@ public class CheckoutPage {
             itemHeader.setAlignment(Pos.CENTER_LEFT);
 
             Label imageLabel = new Label(item.getProduct().getImageUrl());
-            imageLabel.setStyle("-fx-font-size: 30px;");
+            imageLabel.setStyle("-fx-font-size: 40px;");
 
             Label nameLabel = new Label(item.getProduct().getName());
             nameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + Styles.TEXT_DARK + ";");
@@ -188,14 +211,12 @@ public class CheckoutPage {
 
             itemHeader.getChildren().addAll(imageLabel, nameLabel, spacer1);
 
-            // Quantity and price controls
             HBox itemFooter = new HBox(20);
             itemFooter.setAlignment(Pos.CENTER_LEFT);
 
             Label priceLabel = new Label("Rp " + Styles.formatPrice(item.getProduct().getCurrentPrice()));
-            priceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: " + Styles.GOLD + ";");
+            priceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: " + Styles.GOLD + "; -fx-font-weight: bold;");
 
-            // Quantity controls di checkout
             HBox quantityBox = new HBox(10);
             quantityBox.setAlignment(Pos.CENTER);
 
@@ -203,7 +224,8 @@ public class CheckoutPage {
 
             Button minusBtn = new Button("-");
             minusBtn.setStyle("-fx-background-color: " + Styles.BROWN_LIGHT + "; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
-                    "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 30; -fx-cursor: hand;");
+                    "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 30; -fx-cursor: hand;" +
+                    "-fx-background-radius: 15;");
             minusBtn.setOnAction(e -> {
                 if (qty.get() > 1) {
                     qty.set(qty.get() - 1);
@@ -218,7 +240,8 @@ public class CheckoutPage {
 
             Button plusBtn = new Button("+");
             plusBtn.setStyle("-fx-background-color: " + Styles.BROWN_LIGHT + "; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
-                    "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 30; -fx-cursor: hand;");
+                    "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 30; -fx-cursor: hand;" +
+                    "-fx-background-radius: 15;");
             plusBtn.setOnAction(e -> {
                 qty.set(qty.get() + 1);
                 CartService.updateQuantity(item.getProduct(), qty.get());
@@ -229,8 +252,6 @@ public class CheckoutPage {
 
             Label subtotalLabel = new Label();
             subtotalLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + Styles.GOLD + ";");
-
-            // Bind subtotal ke quantity
             subtotalLabel.textProperty().bind(Bindings.createStringBinding(() ->
                     "Rp " + Styles.formatPrice(item.getProduct().getCurrentPrice() * qty.get()), qty));
 
@@ -238,7 +259,6 @@ public class CheckoutPage {
             HBox.setHgrow(spacer2, Priority.ALWAYS);
 
             itemFooter.getChildren().addAll(priceLabel, quantityBox, spacer2, subtotalLabel);
-
             itemRow.getChildren().addAll(itemHeader, itemFooter);
             itemsContainer.getChildren().add(itemRow);
         }
@@ -251,24 +271,20 @@ public class CheckoutPage {
         navBar.setStyle("-fx-background-color: " + Styles.WHITE + "; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
 
-        // Logo VENDOZA dengan icon
-        Label logo = new Label("VENDOZA");
-        logo.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
+        Label logo = new Label("🛒 VENDOZA");
+        logo.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
 
-        // Spacer kiri dan kanan (biar menu di tengah)
         Region leftSpacer = new Region();
         HBox.setHgrow(leftSpacer, Priority.ALWAYS);
         Region rightSpacer = new Region();
         HBox.setHgrow(rightSpacer, Priority.ALWAYS);
 
-        // Navigation Buttons
-        Button homeBtn = createNavButton("Home", false);
-        Button searchBtn = createNavButton("Search", false);
-        Button cartBtn = createNavButton("Cart", false);
-        Button profileBtn = createNavButton("Profile", false);
+        Button homeBtn = createNavButton("🏠 Home", false);
+        Button searchBtn = createNavButton("🔍 Search", false);
+        Button cartBtn = createNavButton("🛒 Cart", false);
+        Button profileBtn = createNavButton("👤 Profile", false);
 
-        // Actions
-        homeBtn.setOnAction(e -> SceneManager.setScene(new HomePage().getScene()));
+        homeBtn.setOnAction(e -> SceneManager.showHomePage());
         searchBtn.setOnAction(e -> SceneManager.setScene(new SearchPage().getScene()));
         cartBtn.setOnAction(e -> {
             if (AuthService.isLoggedIn()) {
@@ -285,7 +301,6 @@ public class CheckoutPage {
             }
         });
 
-        // Susunan: Logo - Spacer Kiri - Menu - Spacer Kanan
         navBar.getChildren().addAll(logo, leftSpacer, homeBtn, searchBtn, cartBtn, profileBtn, rightSpacer);
         return navBar;
     }
@@ -299,10 +314,24 @@ public class CheckoutPage {
         } else {
             btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
                     "-fx-font-size: 14px; -fx-cursor: hand;");
-            btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
-                    "-fx-font-size: 14px; -fx-cursor: hand;"));
-            btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
-                    "-fx-font-size: 14px; -fx-cursor: hand;"));
+
+            btn.setOnMouseEntered(e -> {
+                btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
+                        "-fx-font-size: 14px; -fx-cursor: hand;");
+                ScaleTransition st = new ScaleTransition(Duration.millis(150), btn);
+                st.setToX(1.05);
+                st.setToY(1.05);
+                st.play();
+            });
+
+            btn.setOnMouseExited(e -> {
+                btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
+                        "-fx-font-size: 14px; -fx-cursor: hand;");
+                ScaleTransition st = new ScaleTransition(Duration.millis(150), btn);
+                st.setToX(1);
+                st.setToY(1);
+                st.play();
+            });
         }
         return btn;
     }
@@ -328,12 +357,12 @@ public class CheckoutPage {
     private void placeOrder() {
         String address = addressArea.getText().trim();
         if (address.isEmpty()) {
-            addressError.setText("Please enter shipping address");
+            addressError.setText("❌ Please enter shipping address");
             return;
         }
 
         if (CartService.getCartItemCount() == 0) {
-            addressError.setText("Your cart is empty");
+            addressError.setText("❌ Your cart is empty");
             return;
         }
 
@@ -344,67 +373,42 @@ public class CheckoutPage {
             if (selected.contains("Same Day")) shippingCost = 75000;
         }
 
-        // ===== LOGIKA STATUS BERDASARKAN METODE PEMBAYARAN =====
         String paymentMethod = paymentCombo.getValue();
-        String orderStatus;
+        String orderStatus = (paymentMethod != null && paymentMethod.equals("Cash on Delivery (COD)"))
+                ? "Pending" : "Processing";
 
-        if (paymentMethod != null && paymentMethod.equals("Cash on Delivery (COD)")) {
-            orderStatus = "Pending";  // Belum Bayar (COD)
-        } else {
-            orderStatus = "Processing";  // Dikemas (sudah bayar via Bank/E-Wallet/Credit Card)
-        }
-
-        // Create order
         String orderId = "VEN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         List<CartItem> items = CartService.getCartItems();
         Order order = new Order(orderId, AuthService.getCurrentUser(), items, shippingCost, address);
         order.setStatus(orderStatus);
         AuthService.getCurrentUser().getOrders().add(order);
-
-        // Clear cart
         CartService.clearCart();
 
-        // Status message
         String statusMessage = (orderStatus.equals("Pending")) ?
                 "📌 Pembayaran COD akan dilakukan saat barang diterima.\nPesanan akan segera diproses." :
                 "✅ Pembayaran berhasil! Pesanan sedang diproses.";
 
-        // Show success and go to profile
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Order Placed!");
+        alert.setTitle("Order Placed! 🎉");
         alert.setHeaderText("Order #" + orderId);
         alert.setContentText("Your order has been placed successfully!\n" +
-                "Total: Rp " + Styles.formatPrice(order.getTotal()) + "\n\n" +
-                statusMessage);
-        alert.showAndWait();
+                "Total: Rp " + Styles.formatPrice(order.getTotal()) + "\n\n" + statusMessage);
 
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
+                "-fx-background-radius: 15; -fx-padding: 20;");
+        Button okButton = (Button) dialogPane.lookupButton(ButtonType.OK);
+        okButton.setStyle(Styles.buttonStyle());
+
+        alert.showAndWait();
         SceneManager.setScene(new ProfilePage().getScene());
     }
 
     private void showLoginRequiredAlert() {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Login Required");
-        alert.setHeaderText("Please login first");
-        alert.setContentText("You need to login to checkout.");
-        ButtonType loginBtn = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
-        alert.getButtonTypes().setAll(loginBtn, new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
-        alert.showAndWait().ifPresent(response -> {
-            if (response == loginBtn) {
-                SceneManager.setScene(new LoginPage().getScene());
-            }
-        });
+        LoginRequiredDialog.show("You need to login to checkout.");
     }
 
     private void showLoginAlert() {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Login Required");
-        alert.setHeaderText("Please login first");
-        alert.setContentText("You need to login to access this feature.");
-        ButtonType loginBtn = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
-        ButtonType cancelBtn = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-        alert.getButtonTypes().setAll(loginBtn, cancelBtn);
-        alert.showAndWait().ifPresent(response -> {
-            if (response == loginBtn) SceneManager.setScene(new LoginPage().getScene());
-        });
+        LoginRequiredDialog.show("You need to login to access this feature.");
     }
 }

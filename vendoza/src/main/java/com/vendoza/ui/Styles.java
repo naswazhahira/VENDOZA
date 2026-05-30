@@ -11,7 +11,8 @@ public class Styles {
     public static final String BROWN_DARK = "#5D4037";
     public static final String BROWN_MEDIUM = "#8D6E63";
     public static final String BROWN_LIGHT = "#D7CCC8";
-    public static final String BROWN_PALE = "#EFEBE9";
+    public static final String BROWN_PALE = "#F5F0EB";  // Diubah dari #EFEBE9 ke #F5F0EB (cream)
+    public static final String BROWN_BG = "#E8DCD0";   // TAMBAHKAN: warna background coklat yang lebih jelas
     public static final String GOLD = "#D4AF37";
     public static final String WHITE = "#FFFFFF";
     public static final String TEXT_DARK = "#3E2723";
@@ -19,37 +20,18 @@ public class Styles {
     public static final String ERROR_RED = "#E57373";
     public static final String SUCCESS_GREEN = "#81C784";
 
-    // ===== NAVBAR STYLES (SERAGAM UNTUK SEMUA HALAMAN) =====
-
+    // ===== NAVBAR STYLES =====
     public static String navBarStyle() {
         return "-fx-background-color: " + WHITE + ";" +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);";
     }
 
-    public static String navButtonStyle(boolean isActive) {
-        if (isActive) {
-            return "-fx-background-color: transparent; -fx-text-fill: " + GOLD + ";" +
-                    "-fx-font-size: 14px; -fx-font-weight: bold; -fx-border-color: " + GOLD + ";" +
-                    "-fx-border-width: 0 0 2 0; -fx-border-style: solid; -fx-cursor: hand;";
-        } else {
-            return "-fx-background-color: transparent; -fx-text-fill: " + TEXT_DARK + ";" +
-                    "-fx-font-size: 14px; -fx-cursor: hand;";
-        }
-    }
-
-    public static String logoStyle() {
-        return "-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: " + BROWN_DARK + ";";
-    }
-
     // ===== BACKGROUND STYLE =====
-
     public static String bgStyle() {
-        return "-fx-background-color: " + BROWN_PALE + ";";
+        return "-fx-background-color: " + BROWN_BG + ";";  // Gunakan warna yang lebih jelas
     }
 
     // ===== BUTTON STYLES =====
-
-    // Style untuk Button Primary (Coklat Tua)
     public static String buttonStyle() {
         return "-fx-background-color: " + BROWN_DARK + ";" +
                 "-fx-text-fill: " + WHITE + ";" +
@@ -69,14 +51,12 @@ public class Styles {
                 "-fx-padding: 10 20;";
     }
 
-    // Style untuk Button Outline (Bingkai saja)
     public static String outlineButtonStyle() {
         return "-fx-background-color: transparent; -fx-text-fill: " + BROWN_DARK + ";" +
                 "-fx-border-color: " + BROWN_DARK + "; -fx-border-radius: 25;" +
                 "-fx-padding: 8 20; -fx-cursor: hand;";
     }
 
-    // Style untuk Button Kecil (seperti Cart/Buy Now di product card)
     public static String smallButtonStyle(String type) {
         if (type.equals("cart")) {
             return "-fx-background-color: " + BROWN_LIGHT + "; -fx-text-fill: " + TEXT_DARK + ";" +
@@ -88,7 +68,6 @@ public class Styles {
     }
 
     // ===== TEXT FIELD STYLES =====
-
     public static String textFieldStyle() {
         return "-fx-background-color: " + BROWN_PALE + ";" +
                 "-fx-text-fill: " + TEXT_DARK + ";" +
@@ -100,7 +79,6 @@ public class Styles {
     }
 
     // ===== CARD STYLES =====
-
     public static String cardStyle() {
         return "-fx-background-color: " + WHITE + ";" +
                 "-fx-background-radius: 15;" +
@@ -116,7 +94,6 @@ public class Styles {
     }
 
     // ===== TITLE STYLES =====
-
     public static String pageTitleStyle() {
         return "-fx-font-size: 28px; -fx-font-weight: bold; -fx-fill: " + BROWN_DARK + ";";
     }
@@ -126,7 +103,6 @@ public class Styles {
     }
 
     // ===== UTILITY =====
-
     public static String formatPrice(double price) {
         return String.format("%,.0f", price).replace(",", ".");
     }

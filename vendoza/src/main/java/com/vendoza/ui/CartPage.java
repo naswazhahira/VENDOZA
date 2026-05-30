@@ -4,12 +4,15 @@ import com.vendoza.model.CartItem;
 import com.vendoza.model.Product;
 import com.vendoza.service.AuthService;
 import com.vendoza.service.CartService;
+import javafx.animation.ScaleTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
 
 public class CartPage {
 
@@ -27,31 +30,49 @@ public class CartPage {
 
         VBox mainContent = new VBox(20);
         mainContent.setPadding(new Insets(20, 40, 40, 40));
+        mainContent.setStyle("-fx-background-color: #E8DCD0;");
 
         Text title = new Text("🛒 Your Shopping Cart");
-        title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-fill: " + Styles.BROWN_DARK + ";");
+        title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-fill: " + Styles.BROWN_DARK + ";" +
+                "-fx-border-color: " + Styles.GOLD + ";" +
+                "-fx-border-width: 0 0 3 0; -fx-padding: 0 0 10 0;");
 
         // Cart Items Container
         cartItemsContainer = new VBox(10);
         cartItemsContainer.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
-                "-fx-background-radius: 15; -fx-padding: 20;");
+                "-fx-background-radius: 15; -fx-padding: 20;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
 
         // Order Summary
         VBox summaryBox = new VBox(15);
         summaryBox.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
-                "-fx-background-radius: 15; -fx-padding: 20;");
+                "-fx-background-radius: 15; -fx-padding: 20;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
         summaryBox.setPrefWidth(300);
 
-        Label summaryTitle = new Label("Order Summary");
+        Label summaryTitle = new Label("📋 Order Summary");
         summaryTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
 
         totalLabel = new Label("Total: Rp 0");
-        totalLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: " + Styles.GOLD + ";");
+        totalLabel.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: " + Styles.GOLD + ";");
 
-        Button checkoutBtn = new Button("Proceed to Checkout →");
+        Button checkoutBtn = new Button("✅ Proceed to Checkout");
         checkoutBtn.setStyle(Styles.buttonStyle());
-        checkoutBtn.setOnMouseEntered(e -> checkoutBtn.setStyle(Styles.buttonHoverStyle()));
-        checkoutBtn.setOnMouseExited(e -> checkoutBtn.setStyle(Styles.buttonStyle()));
+        checkoutBtn.setMaxWidth(Double.MAX_VALUE);
+        checkoutBtn.setOnMouseEntered(e -> {
+            checkoutBtn.setStyle(Styles.buttonHoverStyle());
+            ScaleTransition st = new ScaleTransition(Duration.millis(150), checkoutBtn);
+            st.setToX(1.02);
+            st.setToY(1.02);
+            st.play();
+        });
+        checkoutBtn.setOnMouseExited(e -> {
+            checkoutBtn.setStyle(Styles.buttonStyle());
+            ScaleTransition st = new ScaleTransition(Duration.millis(150), checkoutBtn);
+            st.setToX(1);
+            st.setToY(1);
+            st.play();
+        });
         checkoutBtn.setOnAction(e -> {
             if (CartService.getCartItemCount() > 0) {
                 SceneManager.setScene(new CheckoutPage().getScene());
@@ -60,10 +81,22 @@ public class CartPage {
             }
         });
 
-        Button continueBtn = new Button("Continue Shopping");
+        Button continueBtn = new Button("🛍️ Continue Shopping");
         continueBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_MEDIUM + ";" +
-                "-fx-underline: true; -fx-cursor: hand;");
-        continueBtn.setOnAction(e -> SceneManager.setScene(new HomePage().getScene()));
+                "-fx-font-size: 14px; -fx-cursor: hand; -fx-font-weight: bold;");
+        continueBtn.setOnMouseEntered(e -> {
+            continueBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
+                    "-fx-font-size: 14px; -fx-cursor: hand; -fx-font-weight: bold;");
+            continueBtn.setScaleX(1.05);
+            continueBtn.setScaleY(1.05);
+        });
+        continueBtn.setOnMouseExited(e -> {
+            continueBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_MEDIUM + ";" +
+                    "-fx-font-size: 14px; -fx-cursor: hand; -fx-font-weight: bold;");
+            continueBtn.setScaleX(1);
+            continueBtn.setScaleY(1);
+        });
+        continueBtn.setOnAction(e -> SceneManager.showHomePage());
 
         summaryBox.getChildren().addAll(summaryTitle, new Separator(), totalLabel, checkoutBtn, continueBtn);
 
@@ -76,6 +109,7 @@ public class CartPage {
         cartScroll.setPrefHeight(500);
         cartScroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
         cartScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        cartScroll.setBorder(Border.EMPTY);
 
         contentLayout.getChildren().addAll(cartScroll, summaryBox);
         HBox.setHgrow(cartScroll, Priority.ALWAYS);
@@ -84,11 +118,12 @@ public class CartPage {
 
         ScrollPane scrollPane = new ScrollPane(mainContent);
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: " + Styles.BROWN_PALE + ";");
+        scrollPane.setStyle("-fx-background-color: #E8DCD0; -fx-background: #E8DCD0;");
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setBorder(Border.EMPTY);
 
         VBox root = new VBox(navBar, scrollPane);
-        root.setStyle("-fx-background-color: " + Styles.BROWN_PALE + ";");
+        root.setStyle("-fx-background-color: #E8DCD0;");
 
         Scene scene = new Scene(root, 1200, 700);
 
@@ -105,26 +140,28 @@ public class CartPage {
         navBar.setStyle("-fx-background-color: " + Styles.WHITE + "; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
 
-        // Logo VENDOZA dengan icon
-        Label logo = new Label("VENDOZA");
-        logo.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
+        Label logo = new Label("🛒 VENDOZA");
+        logo.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
 
-        // Spacer kiri dan kanan (biar menu di tengah)
         Region leftSpacer = new Region();
         HBox.setHgrow(leftSpacer, Priority.ALWAYS);
         Region rightSpacer = new Region();
         HBox.setHgrow(rightSpacer, Priority.ALWAYS);
 
-        // Navigation Buttons
-        Button homeBtn = createNavButton("Home", false);
-        Button searchBtn = createNavButton("Search", false);
-        Button cartBtn = createNavButton("Cart 🛒", true);
-        Button profileBtn = createNavButton("Profile 👤", false);
+        Button homeBtn = createNavButton("🏠 Home", false);
+        Button searchBtn = createNavButton("🔍 Search", false);
+        Button cartBtn = createNavButton("🛒 Cart", true);
+        Button profileBtn = createNavButton("👤 Profile", false);
 
-        // Actions
-        homeBtn.setOnAction(e -> SceneManager.setScene(new HomePage().getScene()));
+        homeBtn.setOnAction(e -> SceneManager.showHomePage());
         searchBtn.setOnAction(e -> SceneManager.setScene(new SearchPage().getScene()));
-        cartBtn.setOnAction(e -> SceneManager.setScene(new CartPage().getScene()));
+        cartBtn.setOnAction(e -> {
+            if (AuthService.isLoggedIn()) {
+                SceneManager.setScene(new CartPage().getScene());
+            } else {
+                showLoginAlert();
+            }
+        });
         profileBtn.setOnAction(e -> {
             if (AuthService.isLoggedIn()) {
                 SceneManager.setScene(new ProfilePage().getScene());
@@ -133,7 +170,6 @@ public class CartPage {
             }
         });
 
-        // Susunan: Logo - Spacer Kiri - Menu - Spacer Kanan
         navBar.getChildren().addAll(logo, leftSpacer, homeBtn, searchBtn, cartBtn, profileBtn, rightSpacer);
         return navBar;
     }
@@ -147,10 +183,24 @@ public class CartPage {
         } else {
             btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
                     "-fx-font-size: 14px; -fx-cursor: hand;");
-            btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
-                    "-fx-font-size: 14px; -fx-cursor: hand;"));
-            btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
-                    "-fx-font-size: 14px; -fx-cursor: hand;"));
+
+            btn.setOnMouseEntered(e -> {
+                btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
+                        "-fx-font-size: 14px; -fx-cursor: hand;");
+                ScaleTransition st = new ScaleTransition(Duration.millis(150), btn);
+                st.setToX(1.05);
+                st.setToY(1.05);
+                st.play();
+            });
+
+            btn.setOnMouseExited(e -> {
+                btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
+                        "-fx-font-size: 14px; -fx-cursor: hand;");
+                ScaleTransition st = new ScaleTransition(Duration.millis(150), btn);
+                st.setToX(1);
+                st.setToY(1);
+                st.play();
+            });
         }
         return btn;
     }
@@ -159,9 +209,21 @@ public class CartPage {
         cartItemsContainer.getChildren().clear();
 
         if (CartService.getCartItemCount() == 0) {
+            VBox emptyBox = new VBox(15);
+            emptyBox.setAlignment(Pos.CENTER);
+            emptyBox.setPadding(new Insets(50, 0, 50, 0));
+
+            Label emptyIcon = new Label("🛒");
+            emptyIcon.setStyle("-fx-font-size: 64px;");
+
             Label emptyLabel = new Label("Your cart is empty");
-            emptyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: " + Styles.TEXT_LIGHT + ";");
-            cartItemsContainer.getChildren().add(emptyLabel);
+            emptyLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: " + Styles.TEXT_LIGHT + ";");
+
+            Label emptySubLabel = new Label("Add some items to get started!");
+            emptySubLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: " + Styles.TEXT_LIGHT + ";");
+
+            emptyBox.getChildren().addAll(emptyIcon, emptyLabel, emptySubLabel);
+            cartItemsContainer.getChildren().add(emptyBox);
             totalLabel.setText("Total: Rp 0");
             return;
         }
@@ -179,20 +241,28 @@ public class CartPage {
 
         VBox card = new VBox(10);
         card.setStyle("-fx-border-color: " + Styles.BROWN_LIGHT + ";" +
-                "-fx-border-radius: 10; -fx-padding: 15;");
+                "-fx-border-radius: 12; -fx-padding: 15; -fx-background-radius: 12;" +
+                "-fx-background-color: " + Styles.WHITE + ";");
+
+        card.setOnMouseEntered(e -> card.setStyle("-fx-border-color: " + Styles.GOLD + ";" +
+                "-fx-border-radius: 12; -fx-padding: 15; -fx-background-radius: 12;" +
+                "-fx-background-color: " + Styles.WHITE + ";"));
+        card.setOnMouseExited(e -> card.setStyle("-fx-border-color: " + Styles.BROWN_LIGHT + ";" +
+                "-fx-border-radius: 12; -fx-padding: 15; -fx-background-radius: 12;" +
+                "-fx-background-color: " + Styles.WHITE + ";"));
 
         HBox content = new HBox(15);
         content.setAlignment(Pos.CENTER_LEFT);
 
         Label imagePlaceholder = new Label(product.getImageUrl());
-        imagePlaceholder.setStyle("-fx-font-size: 40px;");
+        imagePlaceholder.setStyle("-fx-font-size: 50px;");
 
         VBox details = new VBox(5);
         Label nameLabel = new Label(product.getName());
         nameLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: " + Styles.TEXT_DARK + ";");
 
         Label priceLabel = new Label("Rp " + Styles.formatPrice(product.getCurrentPrice()));
-        priceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: " + Styles.GOLD + ";");
+        priceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: " + Styles.GOLD + "; -fx-font-weight: bold;");
 
         details.getChildren().addAll(nameLabel, priceLabel);
 
@@ -202,7 +272,14 @@ public class CartPage {
 
         Button minusBtn = new Button("-");
         minusBtn.setStyle("-fx-background-color: " + Styles.BROWN_LIGHT + "; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
-                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 30; -fx-cursor: hand;");
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 32; -fx-cursor: hand;" +
+                "-fx-background-radius: 16;");
+        minusBtn.setOnMouseEntered(e -> minusBtn.setStyle("-fx-background-color: " + Styles.GOLD + "; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 32; -fx-cursor: hand;" +
+                "-fx-background-radius: 16;"));
+        minusBtn.setOnMouseExited(e -> minusBtn.setStyle("-fx-background-color: " + Styles.BROWN_LIGHT + "; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 32; -fx-cursor: hand;" +
+                "-fx-background-radius: 16;"));
         minusBtn.setOnAction(e -> {
             int newQty = item.getQuantity() - 1;
             if (newQty > 0) {
@@ -214,11 +291,18 @@ public class CartPage {
         });
 
         Label qtyLabel = new Label(String.valueOf(item.getQuantity()));
-        qtyLabel.setStyle("-fx-font-size: 14px; -fx-min-width: 30; -fx-alignment: center;");
+        qtyLabel.setStyle("-fx-font-size: 14px; -fx-min-width: 30; -fx-alignment: center; -fx-font-weight: bold;");
 
         Button plusBtn = new Button("+");
         plusBtn.setStyle("-fx-background-color: " + Styles.BROWN_LIGHT + "; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
-                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 30; -fx-cursor: hand;");
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 32; -fx-cursor: hand;" +
+                "-fx-background-radius: 16;");
+        plusBtn.setOnMouseEntered(e -> plusBtn.setStyle("-fx-background-color: " + Styles.GOLD + "; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 32; -fx-cursor: hand;" +
+                "-fx-background-radius: 16;"));
+        plusBtn.setOnMouseExited(e -> plusBtn.setStyle("-fx-background-color: " + Styles.BROWN_LIGHT + "; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 32; -fx-cursor: hand;" +
+                "-fx-background-radius: 16;"));
         plusBtn.setOnAction(e -> {
             CartService.updateQuantity(product, item.getQuantity() + 1);
             refreshCart();
@@ -231,20 +315,38 @@ public class CartPage {
 
         HBox actionBox = new HBox(10);
 
-        Button removeBtn = new Button("Remove");
+        Button removeBtn = new Button("🗑️ Remove");
         removeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.ERROR_RED + ";" +
-                "-fx-underline: true; -fx-cursor: hand;");
+                "-fx-font-size: 12px; -fx-cursor: hand; -fx-font-weight: bold;");
+        removeBtn.setOnMouseEntered(e -> removeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #C62828;" +
+                "-fx-font-size: 12px; -fx-cursor: hand; -fx-font-weight: bold;"));
+        removeBtn.setOnMouseExited(e -> removeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.ERROR_RED + ";" +
+                "-fx-font-size: 12px; -fx-cursor: hand; -fx-font-weight: bold;"));
         removeBtn.setOnAction(e -> {
             CartService.removeFromCart(product);
             refreshCart();
         });
 
-        // Buy Now button untuk item ini (checkout item ini saja)
-        Button buyNowBtn = new Button("Buy Now");
+        Button buyNowBtn = new Button("Buy Now →");
         buyNowBtn.setStyle("-fx-background-color: " + Styles.GOLD + "; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
-                "-fx-font-size: 12px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-padding: 5 15; -fx-cursor: hand;");
+                "-fx-font-size: 12px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-padding: 6 18; -fx-cursor: hand;");
+        buyNowBtn.setOnMouseEntered(e -> {
+            buyNowBtn.setStyle("-fx-background-color: " + Styles.BROWN_DARK + "; -fx-text-fill: " + Styles.WHITE + ";" +
+                    "-fx-font-size: 12px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-padding: 6 18; -fx-cursor: hand;");
+            ScaleTransition st = new ScaleTransition(Duration.millis(150), buyNowBtn);
+            st.setToX(1.05);
+            st.setToY(1.05);
+            st.play();
+        });
+        buyNowBtn.setOnMouseExited(e -> {
+            buyNowBtn.setStyle("-fx-background-color: " + Styles.GOLD + "; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
+                    "-fx-font-size: 12px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-padding: 6 18; -fx-cursor: hand;");
+            ScaleTransition st = new ScaleTransition(Duration.millis(150), buyNowBtn);
+            st.setToX(1);
+            st.setToY(1);
+            st.play();
+        });
         buyNowBtn.setOnAction(e -> {
-            // Kosongkan keranjang, tambah item ini dengan quantity yang sama, lalu checkout
             int currentQty = item.getQuantity();
             CartService.clearCart();
             CartService.addToCart(product, currentQty);
@@ -263,31 +365,11 @@ public class CartPage {
     }
 
     private void showLoginRequiredAlert() {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Login Required");
-        alert.setHeaderText("Please login first");
-        alert.setContentText("You need to login to access your cart.");
-        ButtonType loginBtn = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
-        alert.getButtonTypes().setAll(loginBtn, new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
-        alert.showAndWait().ifPresent(response -> {
-            if (response == loginBtn) {
-                SceneManager.setScene(new LoginPage().getScene());
-            }
-        });
+        LoginRequiredDialog.show("You need to login to access your cart.");
     }
 
     private void showLoginAlert() {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Login Required");
-        alert.setHeaderText("Please login first");
-        alert.setContentText("You need to login to access this feature.");
-        ButtonType loginBtn = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
-        alert.getButtonTypes().setAll(loginBtn, new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
-        alert.showAndWait().ifPresent(response -> {
-            if (response == loginBtn) {
-                SceneManager.setScene(new LoginPage().getScene());
-            }
-        });
+        LoginRequiredDialog.show("You need to login to access this feature.");
     }
 
     private void showAlert(String title, String message) {
@@ -295,6 +377,13 @@ public class CartPage {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
+                "-fx-background-radius: 15; -fx-padding: 20;");
+        Button okButton = (Button) dialogPane.lookupButton(ButtonType.OK);
+        okButton.setStyle(Styles.buttonStyle());
+
         alert.showAndWait();
     }
 }

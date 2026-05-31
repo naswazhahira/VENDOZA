@@ -164,11 +164,23 @@ public class LoginPage {
 
         if (AuthService.login(username, password)) {
             messageLabel.setStyle("-fx-text-fill: " + Styles.SUCCESS_GREEN + ";");
-            messageLabel.setText("✅ Login successful! Redirecting...");
 
-            // Pindah ke Home Page setelah 1 detik
+            // Cek apakah user adalah admin
+            if (AuthService.isAdmin()) {
+                messageLabel.setText("✅ Welcome Admin! Redirecting to Admin Panel...");
+            } else {
+                messageLabel.setText("✅ Login successful! Redirecting...");
+            }
+
             javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(1));
-            delay.setOnFinished(e -> SceneManager.showHomePage());
+            delay.setOnFinished(e -> {
+                // Redirect ke halaman yang sesuai
+                if (AuthService.isAdmin()) {
+                    SceneManager.setScene(new AdminDashboardPage().getScene());
+                } else {
+                    SceneManager.showHomePage();
+                }
+            });
             delay.play();
         } else {
             messageLabel.setStyle("-fx-text-fill: " + Styles.ERROR_RED + ";");

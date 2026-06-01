@@ -5,6 +5,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 
@@ -39,6 +40,15 @@ public class RegisterPage {
 
         Scene scene = new Scene(root, 1200, 700);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+
+        // === FITUR BARU: TEKAN ENTER UNTUK REGISTER ===
+        // Mendaftarkan event listener global pada scene agar mendeteksi ketukan tombol keyboard
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                handleRegister();
+            }
+        });
+
         return scene;
     }
 
@@ -136,7 +146,7 @@ public class RegisterPage {
     private VBox createRegisterForm() {
         VBox formContainer = new VBox(25);
         formContainer.setAlignment(Pos.CENTER);
-        formContainer.setPadding(new Insets(50, 40, 80, 40)); // Tambah padding bottom
+        formContainer.setPadding(new Insets(50, 40, 80, 40));
 
         // Card untuk form
         VBox card = new VBox(20);

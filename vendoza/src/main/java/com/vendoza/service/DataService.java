@@ -61,6 +61,14 @@ public class DataService {
                 "/images/straw-beach-hat.png",
                 "Handwoven straw hat, perfect for summer vibes",
                 false, 30, 4.3, 60));
+        products.add(new Product(11, "Butterfly Necklace", "Jewelry", 289000, 0,
+                "/images/butterfly-necklace.png",
+                "An elegant butterfly necklace symbolizing grace and freedom.",
+                false, 60, 4.8, 90));
+        products.add(new Product(12, "Bracelet", "Jewelry", 199000, 0,
+                "/images/bracelet.png",
+                "A delicate bracelet that adds a touch of charm and elegance to your wrist.",
+                false, 20, 4.2, 30));
     }
     
     public static List<Product> getAllProducts() {

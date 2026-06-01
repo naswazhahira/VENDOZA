@@ -38,7 +38,7 @@ public class LoginPage {
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
 
         // BACK BUTTON - Kembali ke HomePage
-        Button backBtn = new Button("← Back to Home");
+        Button backBtn = new Button("< Back to Home");
         backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
                 "-fx-font-size: 14px; -fx-cursor: hand; -fx-font-weight: bold;");
 
@@ -81,10 +81,6 @@ public class LoginPage {
         card.setMaxWidth(450);
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(40));
-
-        // Icon dan Title
-        Label iconLabel = new Label("👋");
-        iconLabel.setStyle("-fx-font-size: 60px;");
 
         Text title = new Text("Welcome Back!");
         title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-fill: " + Styles.BROWN_DARK + ";");
@@ -133,6 +129,9 @@ public class LoginPage {
         });
         loginBtn.setOnAction(e -> handleLogin());
 
+        // PERUBAHAN DI SINI: Memicu fungsi login otomatis saat menekan tombol Enter di keyboard
+        loginBtn.setDefaultButton(true);
+
         // Register Link
         HBox registerBox = new HBox(5);
         registerBox.setAlignment(Pos.CENTER);
@@ -146,7 +145,7 @@ public class LoginPage {
         registerBox.getChildren().addAll(noAccountLabel, registerLink);
 
         // Tambahkan semua ke card
-        card.getChildren().addAll(iconLabel, title, subtitle,
+        card.getChildren().addAll(title, subtitle,
                 usernameBox, passwordBox, loginBtn, messageLabel, registerBox);
 
         formContainer.getChildren().add(card);

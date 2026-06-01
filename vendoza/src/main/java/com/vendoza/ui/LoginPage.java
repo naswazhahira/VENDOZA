@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
+import javafx.stage.Screen;
 
 public class LoginPage {
 
@@ -15,59 +16,83 @@ public class LoginPage {
     private Label messageLabel;
 
     public Scene getScene() {
-        // Root Layout dengan BorderPane
-        BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: " + Styles.BROWN_PALE + ";");
+        double screenWidth = Screen.getPrimary().getBounds().getWidth();
+        double screenHeight = Screen.getPrimary().getBounds().getHeight();
 
-        // === HEADER DENGAN BACK BUTTON ===
-        HBox header = createHeader();
-        root.setTop(header);
+        HBox navBar = createNavBar();
 
-        // === MAIN CONTENT (FORM LOGIN) ===
-        VBox centerContent = createLoginForm();
-        root.setCenter(centerContent);
+        ScrollPane scrollPane = new ScrollPane(createContent());
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: #ebddc3; -fx-background: #ebddc3;");
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setBorder(Border.EMPTY);
 
-        return new Scene(root, 1200, 700);
+        VBox mainLayout = new VBox(navBar, scrollPane);
+        mainLayout.setStyle("-fx-background-color: #ebddc3;");
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+
+        Scene scene = new Scene(mainLayout, screenWidth, screenHeight);
+
+        // CSS dengan pengecekan null
+        java.net.URL cssUrl = getClass().getResource("/styles.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
+
+        return scene;
     }
 
-    private HBox createHeader() {
-        HBox header = new HBox(15);
-        header.setPadding(new Insets(20, 40, 20, 40));
-        header.setAlignment(Pos.CENTER_LEFT);
-        header.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
+    private HBox createNavBar() {
+        HBox navBar = new HBox(30);
+        navBar.setAlignment(Pos.CENTER_LEFT);
+        navBar.setPadding(new Insets(16, 50, 16, 22));
+        navBar.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);"
+        );
 
-        // BACK BUTTON - Kembali ke HomePage
-        Button backBtn = new Button("< Back to Home");
+        Button backBtn = new Button("❮");
         backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
-                "-fx-font-size: 14px; -fx-cursor: hand; -fx-font-weight: bold;");
+                "-fx-font-size: 24px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 0 8 0 0;");
 
-        backBtn.setOnMouseEntered(e -> {
-            backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
-                    "-fx-font-size: 14px; -fx-cursor: hand; -fx-font-weight: bold;");
-            backBtn.setScaleX(1.05);
-            backBtn.setScaleY(1.05);
-        });
-
-        backBtn.setOnMouseExited(e -> {
-            backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
-                    "-fx-font-size: 14px; -fx-cursor: hand; -fx-font-weight: bold;");
-            backBtn.setScaleX(1);
-            backBtn.setScaleY(1);
-        });
-
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #D4A853;" +
+                        "-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Georgia'; " +
+                        "-fx-padding: 0 10 0 0; -fx-cursor: hand;"
+        ));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #3E2723;" +
+                        "-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Georgia'; " +
+                        "-fx-padding: 0 10 0 0; -fx-cursor: hand;"
+        ));
         backBtn.setOnAction(e -> SceneManager.showHomePage());
 
-        // Spacer
+        Label logo = new Label("VENDOZA");
+        logo.setStyle(
+                "-fx-font-size: 24px; -fx-font-weight: bold;" +
+                        "-fx-text-fill: #3E2723; -fx-font-family: 'Georgia';"
+        );
+        
+        HBox logoGroup = new HBox(4);
+        logoGroup.setAlignment(Pos.CENTER_LEFT);
+        logoGroup.getChildren().addAll(backBtn, logo);
+
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        navBar.getChildren().addAll(logoGroup, spacer);
+        return navBar;
+    }
 
-        // Logo
-        Label logo = new Label("👗 VENDOZA");
-        logo.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
+    private VBox createContent() {
+        VBox content = new VBox(30);
+        content.setPadding(new Insets(60, 80, 60, 80));
+        content.setStyle("-fx-background-color: #ebddc3;");
+        content.setAlignment(Pos.CENTER);
 
-        header.getChildren().addAll(backBtn, spacer, logo);
-        return header;
+        VBox loginForm = createLoginForm();
+        content.getChildren().add(loginForm);
+        return content;
     }
 
     private VBox createLoginForm() {
@@ -80,7 +105,7 @@ public class LoginPage {
         card.setStyle(Styles.cardStyle());
         card.setMaxWidth(450);
         card.setAlignment(Pos.CENTER);
-        card.setPadding(new Insets(40));
+        card.setPadding(new Insets(60, 40, 40, 40));
 
         Text title = new Text("Welcome Back!");
         title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-fill: " + Styles.BROWN_DARK + ";");
@@ -129,7 +154,7 @@ public class LoginPage {
         });
         loginBtn.setOnAction(e -> handleLogin());
 
-        // PERUBAHAN DI SINI: Memicu fungsi login otomatis saat menekan tombol Enter di keyboard
+        // Memicu fungsi login otomatis saat menekan tombol Enter di keyboard
         loginBtn.setDefaultButton(true);
 
         // Register Link

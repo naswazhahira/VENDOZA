@@ -487,7 +487,7 @@ public class AdminDashboardPage {
                 if (name.isEmpty()) { CustomDialog.showError("Validation", "Product name cannot be empty."); return; }
 
                 if (isEdit) {
-                    DataService.updateProduct(existing.getId(), name, category, price, discount, image, desc, onSale, stock, existing.getBrand(), existing.getMaterial());
+                    DataService.updateProduct(existing.getId(), name, category, price, discount, image, desc, onSale, stock);
                 } else {
                     DataService.addProduct(name, category, price, discount, image, desc, onSale, stock, "VENDOZA", "Premium");
                 }

@@ -5,20 +5,87 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.Screen;
 
 public class PaymentMethodPage {
 
     public Scene getScene() {
+
+        double screenWidth = Screen.getPrimary().getBounds().getWidth();
+        double screenHeight = Screen.getPrimary().getBounds().getHeight();
+
         HBox navBar = createNavBar();
 
-        VBox mainContent = new VBox(20);
-        mainContent.setPadding(new Insets(30, 40, 40, 40));
-        mainContent.setStyle("-fx-background-color: #E8DCD0;");
+        ScrollPane scrollPane = new ScrollPane(createContent());
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: #ebddc3; -fx-background: #ebddc3;");
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setBorder(Border.EMPTY);
 
-        //Label pageTitle = new Label("💳 Payment Methods");
-        //pageTitle.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
+        VBox mainLayout = new VBox(navBar, scrollPane);
+        mainLayout.setStyle("-fx-background-color: #ebddc3;");
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        // Bank Transfer
+        Scene scene = new Scene(mainLayout, screenWidth, screenHeight);
+
+        // CSS dengan pengecekan null
+        java.net.URL cssUrl = getClass().getResource("/styles.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
+
+        return scene;
+    }
+
+    private HBox createNavBar() {
+        HBox navBar = new HBox(30);
+        navBar.setAlignment(Pos.CENTER_LEFT);
+        navBar.setPadding(new Insets(16, 50, 16, 22));
+        navBar.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);"
+        );
+
+        Button backBtn = new Button("❮");
+        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
+                "-fx-font-size: 24px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 0 8 0 0;");
+
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #D4A853;" +
+                        "-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Georgia'; " +
+                        "-fx-padding: 0 10 0 0; -fx-cursor: hand;"
+        ));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #3E2723;" +
+                        "-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Georgia'; " +
+                        "-fx-padding: 0 10 0 0; -fx-cursor: hand;"
+        ));
+        backBtn.setOnAction(e -> SceneManager.setScene(new ProfilePage().getScene()));
+
+        Label logo = new Label("Payment Methods");
+        logo.setStyle(
+                "-fx-font-size: 24px; -fx-font-weight: bold;" +
+                        "-fx-text-fill: #3E2723; -fx-font-family: 'Georgia';"
+        );
+
+        HBox logoGroup = new HBox(4);
+        logoGroup.setAlignment(Pos.CENTER_LEFT);
+        logoGroup.getChildren().addAll(backBtn, logo);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        navBar.getChildren().addAll(logoGroup, spacer);
+        return navBar;
+    }
+
+    private VBox createContent() {
+        VBox content = new VBox(20);
+        content.setPadding(new Insets(40, 60, 60, 60));
+        content.setStyle("-fx-background-color: #ebddc3;");
+        content.setAlignment(Pos.TOP_CENTER);
+
+        // Bank Transfer - FULL WIDTH
         VBox bankCard = createPaymentGroup("🏦 Bank Transfer",
                 new String[][]{
                         {"BCA", "1234-5678-9012", "a/n Vendoza Official"},
@@ -27,8 +94,9 @@ public class PaymentMethodPage {
                         {"BRI", "6789-0123-4567", "a/n Vendoza Official"}
                 });
         bankCard.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(bankCard, Priority.ALWAYS);
 
-        // E-Wallet
+        // E-Wallet - FULL WIDTH
         VBox ewalletCard = createPaymentGroup("📱 E-Wallet",
                 new String[][]{
                         {"GoPay", "0812-3456-7890", "Vendoza Store"},
@@ -37,30 +105,31 @@ public class PaymentMethodPage {
                         {"ShopeePay", "0812-3456-7890", "Vendoza Store"}
                 });
         ewalletCard.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(ewalletCard, Priority.ALWAYS);
 
-        // COD & Credit Card
+        // COD & Other Options - FULL WIDTH
         VBox otherCard = new VBox(12);
         otherCard.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
                 "-fx-background-radius: 15; -fx-padding: 20;" +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
         otherCard.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(otherCard, Priority.ALWAYS);
 
         Label otherTitle = new Label("💰 Other Payment Options");
         otherTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
 
         HBox codRow = createSimplePaymentRow("🚚 COD (Cash on Delivery)", "Pay when your order arrives");
-        //HBox ccRow = createSimplePaymentRow("💳 Credit / Debit Card", "Visa, Mastercard, and others");
-        //HBox qrisRow = createSimplePaymentRow("📷 QRIS", "Scan QR code for payment");
 
         otherCard.getChildren().addAll(otherTitle, codRow);
 
-        // Info box
+        // Info box - FULL WIDTH
         VBox infoBox = new VBox(8);
         infoBox.setStyle("-fx-background-color: " + Styles.BROWN_PALE + ";" +
                 "-fx-background-radius: 10; -fx-padding: 15;");
         infoBox.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(infoBox, Priority.ALWAYS);
 
-        Label infoHeader = new Label(" Payment Information");
+        Label infoHeader = new Label("Payment Information");
         infoHeader.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
 
         Label infoText = new Label("Transfer confirmation is processed automatically within 1x24 hours. " +
@@ -71,19 +140,8 @@ public class PaymentMethodPage {
 
         infoBox.getChildren().addAll(infoHeader, infoText);
 
-        mainContent.getChildren().addAll(bankCard, ewalletCard, otherCard, infoBox);
-
-        ScrollPane scrollPane = new ScrollPane(mainContent);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: #E8DCD0; -fx-background: #E8DCD0;");
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setBorder(Border.EMPTY);
-
-        VBox root = new VBox(navBar, scrollPane);
-        root.setStyle("-fx-background-color: #E8DCD0;");
-
-        Scene scene = new Scene(root, 1200, 700);
-        return scene;
+        content.getChildren().addAll(bankCard, ewalletCard, otherCard, infoBox);
+        return content;
     }
 
     private VBox createPaymentGroup(String groupTitle, String[][] items) {
@@ -91,7 +149,8 @@ public class PaymentMethodPage {
         card.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
                 "-fx-background-radius: 15; -fx-padding: 20;" +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
-        card.setMaxWidth(600);
+        card.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(card, Priority.ALWAYS);
 
         Label title = new Label(groupTitle);
         title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
@@ -102,8 +161,12 @@ public class PaymentMethodPage {
             row.setAlignment(Pos.CENTER_LEFT);
             row.setStyle("-fx-background-color: " + Styles.BROWN_PALE + ";" +
                     "-fx-background-radius: 10; -fx-padding: 12 15;");
+            row.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(row, Priority.ALWAYS);
 
             VBox info = new VBox(3);
+            HBox.setHgrow(info, Priority.ALWAYS);
+
             Label nameLabel = new Label(item[0]);
             nameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
 
@@ -144,8 +207,12 @@ public class PaymentMethodPage {
         row.setAlignment(Pos.CENTER_LEFT);
         row.setStyle("-fx-background-color: " + Styles.BROWN_PALE + ";" +
                 "-fx-background-radius: 10; -fx-padding: 12 15;");
+        row.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(row, Priority.ALWAYS);
 
         VBox info = new VBox(3);
+        HBox.setHgrow(info, Priority.ALWAYS);
+
         Label nameLabel = new Label(name);
         nameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
 
@@ -159,28 +226,5 @@ public class PaymentMethodPage {
 
         row.getChildren().addAll(info, sp);
         return row;
-    }
-
-    private HBox createNavBar() {
-        HBox navBar = new HBox(20);
-        navBar.setAlignment(Pos.CENTER_LEFT);
-        navBar.setPadding(new Insets(15, 40, 15, 40));
-        navBar.setStyle("-fx-background-color: " + Styles.WHITE + "; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
-
-        Button backBtn = new Button("< Back");
-        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
-                "-fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;");
-        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
-                "-fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;"));
-        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
-                "-fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;"));
-        backBtn.setOnAction(e -> SceneManager.setScene(new ProfilePage().getScene()));
-
-        Label title = new Label("💳 Payment Methods");
-        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
-
-        navBar.getChildren().addAll(backBtn, title);
-        return navBar;
     }
 }

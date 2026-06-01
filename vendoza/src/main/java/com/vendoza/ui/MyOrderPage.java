@@ -4,13 +4,12 @@ import com.vendoza.model.CartItem;
 import com.vendoza.model.Order;
 import com.vendoza.model.User;
 import com.vendoza.service.AuthService;
-import javafx.animation.ScaleTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.util.Duration;
+import javafx.stage.Screen;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -28,25 +27,28 @@ public class MyOrderPage {
     public Scene getSceneWithFilter(String filter) {
         this.currentFilter = filter;
 
+        double screenWidth = Screen.getPrimary().getBounds().getWidth();
+        double screenHeight = Screen.getPrimary().getBounds().getHeight();
+
         HBox navBar = createNavBar();
 
         VBox mainContent = new VBox(0);
-        mainContent.setStyle("-fx-background-color: #E8DCD0;");
+        mainContent.setStyle("-fx-background-color: #ebddc3;");
 
-        // Tab Filter (ala Shopee)
+        // Tab Filter
         HBox tabBar = createTabBar();
 
         // Order List
         orderListContainer = new VBox(12);
-        orderListContainer.setPadding(new Insets(15, 40, 40, 40));
-        orderListContainer.setAlignment(Pos.CENTER);
+        orderListContainer.setPadding(new Insets(15, 60, 60, 60));
+        orderListContainer.setAlignment(Pos.TOP_CENTER);
         orderListContainer.setMaxWidth(Double.MAX_VALUE);
 
         loadOrders();
 
         ScrollPane scrollPane = new ScrollPane(orderListContainer);
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: #E8DCD0; -fx-background: #E8DCD0;");
+        scrollPane.setStyle("-fx-background-color: #ebddc3; -fx-background: #ebddc3;");
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setBorder(Border.EMPTY);
 
@@ -54,35 +56,59 @@ public class MyOrderPage {
 
         VBox root = new VBox(navBar, mainContent);
         VBox.setVgrow(mainContent, Priority.ALWAYS);
-        root.setStyle("-fx-background-color: #E8DCD0;");
+        root.setStyle("-fx-background-color: #ebddc3;");
 
-        Scene scene = new Scene(root, 1200, 700);
+        Scene scene = new Scene(root, screenWidth, screenHeight);
+
+        // CSS dengan pengecekan null
+        java.net.URL cssUrl = getClass().getResource("/styles.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
+
         return scene;
     }
 
     private HBox createNavBar() {
-        HBox navBar = new HBox(20);
-        navBar.setAlignment(Pos.CENTER);
-        navBar.setPadding(new Insets(15, 40, 15, 40));
-        navBar.setStyle("-fx-background-color: " + Styles.WHITE + "; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
+        HBox navBar = new HBox(30);
+        navBar.setAlignment(Pos.CENTER_LEFT);
+        navBar.setPadding(new Insets(16, 50, 16, 22));
+        navBar.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);"
+        );
 
-        Button backBtn = new Button("< Back");
+        Button backBtn = new Button("❮");
         backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
-                "-fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;");
-        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
-                "-fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;"));
-        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
-                "-fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;"));
+                "-fx-font-size: 24px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 0 8 0 0;");
+
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #D4A853;" +
+                        "-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Georgia'; " +
+                        "-fx-padding: 0 10 0 0; -fx-cursor: hand;"
+        ));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #3E2723;" +
+                        "-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Georgia'; " +
+                        "-fx-padding: 0 10 0 0; -fx-cursor: hand;"
+        ));
         backBtn.setOnAction(e -> SceneManager.setScene(new ProfilePage().getScene()));
 
-        Label title = new Label("My Order");
-        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
+        Label logo = new Label("My Order");
+        logo.setStyle(
+                "-fx-font-size: 24px; -fx-font-weight: bold;" +
+                        "-fx-text-fill: #3E2723; -fx-font-family: 'Georgia';"
+        );
+
+        // Gabungkan Back dan Logo dalam satu HBox
+        HBox logoGroup = new HBox(4);
+        logoGroup.setAlignment(Pos.CENTER_LEFT);
+        logoGroup.getChildren().addAll(backBtn, logo);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        navBar.getChildren().addAll(backBtn, title, spacer);
+        navBar.getChildren().addAll(logoGroup, spacer);
         return navBar;
     }
 
@@ -90,6 +116,7 @@ public class MyOrderPage {
         HBox tabBar = new HBox(0);
         tabBar.setStyle("-fx-background-color: " + Styles.WHITE + "; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 3, 0, 0, 2);");
+        tabBar.setMaxWidth(Double.MAX_VALUE);
 
         String[] tabs = {"All", "Pending", "Processing", "Shipped", "Delivered"};
         String[] tabIcons = {"📋", "⏳", "📦", "🚚", "✅"};
@@ -99,8 +126,6 @@ public class MyOrderPage {
             Button tabBtn = new Button(tabIcons[i] + " " + tabName);
             HBox.setHgrow(tabBtn, Priority.ALWAYS);
             tabBtn.setMaxWidth(Double.MAX_VALUE);
-
-            // Tambahkan baris ini untuk membuat teks dan ikon rata tengah
             tabBtn.setAlignment(Pos.CENTER);
 
             boolean isActive = tabName.equals(currentFilter);
@@ -143,19 +168,21 @@ public class MyOrderPage {
         if (orders.isEmpty()) {
             VBox emptyBox = new VBox(15);
             emptyBox.setAlignment(Pos.CENTER);
-            emptyBox.setPadding(new Insets(80, 0, 0, 0));
+            emptyBox.setPadding(new Insets(80, 0, 80, 0));
 
-            Label emptyIcon = new Label("🛍️");
-            emptyIcon.setStyle("-fx-font-size: 60px;");
+            // Icon diganti dengan shopping bag
+            Label emptyIcon = new Label("🛒");
+            emptyIcon.setStyle("-fx-font-size: 70px;");
 
-            Label emptyLabel = new Label("No orders yet");
-            emptyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: " + Styles.TEXT_LIGHT + ";");
+            Label emptyLabel = new Label("No Orders Yet");
+            emptyLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
 
             Label emptySubLabel = new Label("Start shopping to see your orders here!");
             emptySubLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: " + Styles.TEXT_LIGHT + ";");
 
-            Button shopBtn = new Button("🛒 Shop Now");
+            Button shopBtn = new Button("Shop Now");
             shopBtn.setStyle(Styles.buttonStyle());
+            shopBtn.setPrefWidth(160);
             shopBtn.setOnAction(e -> SceneManager.showHomePage());
 
             emptyBox.getChildren().addAll(emptyIcon, emptyLabel, emptySubLabel, shopBtn);
@@ -172,6 +199,7 @@ public class MyOrderPage {
         card.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
                 "-fx-background-radius: 12; -fx-padding: 15;" +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
+        card.setMaxWidth(Double.MAX_VALUE);
 
         // Order Header
         HBox headerRow = new HBox(10);

@@ -158,7 +158,7 @@ public class CheckoutPage {
         VBox content = new VBox(28);
         content.setPadding(new Insets(30, 80, 60, 80));
         content.setAlignment(Pos.TOP_CENTER);
-        content.setStyle("-fx-background-color: #F0E8DF;");
+        content.setStyle("-fx-background-color: #ebddc3;");
 
         HBox stepBar = buildStepIndicator(2);
 

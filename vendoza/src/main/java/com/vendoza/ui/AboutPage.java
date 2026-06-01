@@ -8,24 +8,96 @@ import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
+import javafx.stage.Screen;
 
 public class AboutPage {
 
     public Scene getScene() {
+
+        double screenWidth = Screen.getPrimary().getBounds().getWidth();
+        double screenHeight = Screen.getPrimary().getBounds().getHeight();
+
         HBox navBar = createNavBar();
 
-        VBox mainContent = new VBox(25);
-        mainContent.setPadding(new Insets(30, 40, 40, 40));
-        mainContent.setStyle("-fx-background-color: #E8DCD0;");
-        mainContent.setAlignment(Pos.TOP_CENTER);
+        ScrollPane scrollPane = new ScrollPane(createContent());
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: #ebddc3; -fx-background: #ebddc3;");
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setBorder(Border.EMPTY);
 
-        // Hero card
+        VBox mainLayout = new VBox(navBar, scrollPane);
+        mainLayout.setStyle("-fx-background-color: #ebddc3;");
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+
+        Scene scene = new Scene(mainLayout, screenWidth, screenHeight);
+
+        // CSS dengan pengecekan null
+        java.net.URL cssUrl = getClass().getResource("/styles.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
+
+        return scene;
+    }
+
+    private HBox createNavBar() {
+        HBox navBar = new HBox(30);
+        navBar.setAlignment(Pos.CENTER_LEFT);
+        navBar.setPadding(new Insets(16, 50, 16, 22));
+        navBar.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);"
+        );
+
+        Button backBtn = new Button("❮");
+        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
+                "-fx-font-size: 24px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 0 8 0 0;");
+
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #D4A853;" +
+                        "-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Georgia'; " +
+                        "-fx-padding: 0 10 0 0; -fx-cursor: hand;"
+        ));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #3E2723;" +
+                        "-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Georgia'; " +
+                        "-fx-padding: 0 10 0 0; -fx-cursor: hand;"
+        ));
+        backBtn.setOnAction(e -> SceneManager.setScene(new ProfilePage().getScene()));
+
+        Label logo = new Label("About Vendoza");
+        logo.setStyle(
+                "-fx-font-size: 24px; -fx-font-weight: bold;" +
+                        "-fx-text-fill: #3E2723; -fx-font-family: 'Georgia';"
+        );
+
+        // Gabungkan Back dan Logo dalam satu HBox
+        HBox logoGroup = new HBox(4);
+        logoGroup.setAlignment(Pos.CENTER_LEFT);
+        logoGroup.getChildren().addAll(backBtn, logo);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Tidak ada tombol Cart atau navigasi lain
+        navBar.getChildren().addAll(logoGroup, spacer);
+        return navBar;
+    }
+
+    private VBox createContent() {
+        VBox content = new VBox(25);
+        content.setPadding(new Insets(40, 60, 60, 60));
+        content.setStyle("-fx-background-color: #ebddc3;");
+        content.setAlignment(Pos.TOP_CENTER);
+
+        // Hero card - FULL WIDTH
         VBox heroCard = new VBox(15);
         heroCard.setAlignment(Pos.CENTER);
         heroCard.setStyle("-fx-background-color: " + Styles.BROWN_DARK + ";" +
                 "-fx-background-radius: 20; -fx-padding: 40;" +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 8);");
-        heroCard.setMaxWidth(Double.MAX_VALUE);
+        heroCard.setMaxWidth(Double.MAX_VALUE);  // FULL WIDTH
+        HBox.setHgrow(heroCard, Priority.ALWAYS);
 
         // Logo circle
         StackPane logoContainer = new StackPane();
@@ -50,14 +122,27 @@ public class AboutPage {
 
         heroCard.getChildren().addAll(logoContainer, appName, tagline, versionLabel);
 
-        // About card
+        // Stats row - FULL WIDTH
+        HBox statsRow = new HBox(15);
+        statsRow.setAlignment(Pos.CENTER);
+        statsRow.setMaxWidth(Double.MAX_VALUE);  // FULL WIDTH
+        HBox.setHgrow(statsRow, Priority.ALWAYS);
+
+        statsRow.getChildren().addAll(
+                createStatBox("500+", "Products"),
+                createStatBox("10K+", "Happy Customers"),
+                createStatBox("50+", "Brands")
+        );
+
+        // About card - FULL WIDTH
         VBox aboutCard = new VBox(15);
         aboutCard.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
                 "-fx-background-radius: 15; -fx-padding: 25;" +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
-        aboutCard.setMaxWidth(Double.MAX_VALUE);
+        aboutCard.setMaxWidth(Double.MAX_VALUE);  // FULL WIDTH
+        HBox.setHgrow(aboutCard, Priority.ALWAYS);
 
-        Label aboutTitle = new Label("About Us");
+        Label aboutTitle = new Label("📖 About Us");
         aboutTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
         aboutTitle.setMaxWidth(Double.MAX_VALUE);
 
@@ -73,23 +158,13 @@ public class AboutPage {
 
         aboutCard.getChildren().addAll(aboutTitle, aboutText);
 
-        // Stats row
-        HBox statsRow = new HBox(15);
-        statsRow.setAlignment(Pos.CENTER);
-        statsRow.setMaxWidth(Double.MAX_VALUE);
-
-        statsRow.getChildren().addAll(
-                createStatBox("500+", "Products"),
-                createStatBox("10K+", "Happy Customers"),
-                createStatBox("50+", "Brands")
-        );
-
-        // Features card
+        // Features card - FULL WIDTH
         VBox featuresCard = new VBox(12);
         featuresCard.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
                 "-fx-background-radius: 15; -fx-padding: 25;" +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
-        featuresCard.setMaxWidth(Double.MAX_VALUE);
+        featuresCard.setMaxWidth(Double.MAX_VALUE);  // FULL WIDTH
+        HBox.setHgrow(featuresCard, Priority.ALWAYS);
 
         Label featTitle = new Label("✨ What We Offer");
         featTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
@@ -107,12 +182,16 @@ public class AboutPage {
             HBox featureRow = new HBox(12);
             featureRow.setAlignment(Pos.CENTER_LEFT);
             featureRow.setStyle("-fx-padding: 5 0;");
+            featureRow.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(featureRow, Priority.ALWAYS);
 
             Label featureIcon = new Label(feature[0]);
             featureIcon.setStyle("-fx-font-size: 20px;");
             featureIcon.setMinWidth(30);
 
             VBox featureInfo = new VBox(2);
+            HBox.setHgrow(featureInfo, Priority.ALWAYS);
+
             Label featureName = new Label(feature[1]);
             featureName.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
             Label featureDesc = new Label(feature[2]);
@@ -123,19 +202,8 @@ public class AboutPage {
             featuresCard.getChildren().add(featureRow);
         }
 
-        mainContent.getChildren().addAll(heroCard, statsRow, aboutCard, featuresCard);
-
-        ScrollPane scrollPane = new ScrollPane(mainContent);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: #E8DCD0; -fx-background: #E8DCD0;");
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setBorder(Border.EMPTY);
-
-        VBox root = new VBox(navBar, scrollPane);
-        root.setStyle("-fx-background-color: #E8DCD0;");
-
-        Scene scene = new Scene(root, 1200, 700);
-        return scene;
+        content.getChildren().addAll(heroCard, statsRow, aboutCard, featuresCard);
+        return content;
     }
 
     private VBox createStatBox(String number, String label) {
@@ -154,28 +222,5 @@ public class AboutPage {
 
         box.getChildren().addAll(numLabel, lblLabel);
         return box;
-    }
-
-    private HBox createNavBar() {
-        HBox navBar = new HBox(20);
-        navBar.setAlignment(Pos.CENTER_LEFT);
-        navBar.setPadding(new Insets(15, 40, 15, 40));
-        navBar.setStyle("-fx-background-color: " + Styles.WHITE + "; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
-
-        Button backBtn = new Button("< Back");
-        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
-                "-fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;");
-        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
-                "-fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;"));
-        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
-                "-fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;"));
-        backBtn.setOnAction(e -> SceneManager.setScene(new ProfilePage().getScene()));
-
-        Label title = new Label("About Vendoza");
-        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
-
-        navBar.getChildren().addAll(backBtn, title);
-        return navBar;
     }
 }

@@ -9,11 +9,17 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Popup;
+import javafx.stage.Screen;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -84,18 +90,21 @@ public class SearchPage {
     }
 
     private final List<CategoryMapping> categoryMappings = List.of(
-            new CategoryMapping("Women's Fashion", "👗", List.of("Women", "woman", "dress", "blouse", "skirt", "knit", "blazer", "shirt")),
-            new CategoryMapping("Men's Fashion", "👔", List.of("Men", "man", "jacket", "cargo", "denim", "sneakers")),
+            new CategoryMapping("Women", "👗", List.of("Women", "woman", "dress", "blouse", "skirt", "knit", "blazer", "shirt")),
+            new CategoryMapping("Men", "👔", List.of("Men", "man", "jacket", "cargo", "denim", "sneakers")),
             new CategoryMapping("Accessories", "👜", List.of("Accessories", "bag", "scarf", "hat", "accessory", "tote")),
             new CategoryMapping("Footwear", "👟", List.of("shoes", "sneakers", "footwear", "shoe", "sneaker", "leather")),
             new CategoryMapping("Jewelry", "💍", List.of("jewelry", "necklace", "ring", "earring", "bracelet", "pendant"), "#F3E5F5")
     );
 
     public Scene getScene() {
+        double screenWidth = Screen.getPrimary().getBounds().getWidth();
+        double screenHeight = Screen.getPrimary().getBounds().getHeight();
+
         loadSuggestionData();
 
         VBox root = new VBox();
-        root.setStyle("-fx-background-color: " + Styles.BROWN_PALE + ";");
+        root.setStyle("-fx-background-color: #ebddc3;");
 
         HBox navBar = createNavBar();
         mainContent = createMainContent();
@@ -109,7 +118,12 @@ public class SearchPage {
         root.getChildren().addAll(navBar, mainScrollPane);
         VBox.setVgrow(mainScrollPane, Priority.ALWAYS);
 
-        Scene scene = new Scene(root, 1200, 700);
+        Scene scene = new Scene(root, screenWidth, screenHeight);
+
+        java.net.URL cssUrl = getClass().getResource("/styles.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
 
         // Keyboard handler untuk navigasi suggestion popup dan hasil pencarian
         scene.setOnKeyPressed(event -> {
@@ -141,7 +155,6 @@ public class SearchPage {
                         event.consume();
                         break;
                     case ENTER:
-                        // ENTER ditangani oleh searchField.setOnKeyPressed
                         event.consume();
                         break;
                     case ESCAPE:
@@ -198,7 +211,6 @@ public class SearchPage {
     private void selectNextProduct() {
         if (productCards.isEmpty()) return;
 
-        // Remove previous selection style
         if (currentSelectedCardIndex >= 0) {
             productCards.get(currentSelectedCardIndex).setStyle(
                     "-fx-background-color: white;" +
@@ -215,7 +227,6 @@ public class SearchPage {
     private void selectPreviousProduct() {
         if (productCards.isEmpty()) return;
 
-        // Remove previous selection style
         if (currentSelectedCardIndex >= 0) {
             productCards.get(currentSelectedCardIndex).setStyle(
                     "-fx-background-color: white;" +
@@ -372,7 +383,6 @@ public class SearchPage {
 
                 suggestionPopup.show(searchField.getScene().getWindow(), popupX, popupY);
                 isSuggestionShowing = true;
-                // Fokus tetap di searchField, tidak dipindah ke suggestionListView
                 Platform.runLater(() -> searchField.requestFocus());
             }
         }
@@ -567,10 +577,8 @@ public class SearchPage {
 
     private VBox createHeaderSection() {
         VBox headerBox = new VBox(5);
-
         Text title = new Text("Find Your Style");
         title.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-fill: " + Styles.BROWN_DARK + ";");
-
         headerBox.getChildren().addAll(title);
         return headerBox;
     }
@@ -619,7 +627,6 @@ public class SearchPage {
                 hideSuggestions();
             }
 
-            // Reset flags when user types new text
             if (isManualSearch || isFromSuggestion) {
                 isManualSearch = false;
                 isFromSuggestion = false;
@@ -673,7 +680,6 @@ public class SearchPage {
             e.consume();
         });
 
-        // Handler untuk tombol ENTER di search field menggunakan setOnKeyPressed
         searchField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 if (isSuggestionShowing) {
@@ -767,23 +773,21 @@ public class SearchPage {
         cardsBox.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(cardsBox, Priority.ALWAYS);
 
-        // Simpan referensi ke cardsBox untuk dipakai loadCategoryChips
         categoryChipsBox = new FlowPane();
         categoryChipsBox.setVisible(false);
         categoryChipsBox.setManaged(false);
 
-        // Build kartu langsung ke HBox dengan spacer antar kartu
         String[][] categoryImages = {
-                {"Women's Fashion",  getClass().getResource("/images/women-fashion.jpeg").toExternalForm()},
-                {"Men's Fashion",    getClass().getResource("/images/men.jpeg").toExternalForm()},
-                {"Accessories",      getClass().getResource("/images/accessories.jpeg").toExternalForm()},
-                {"Footwear",         getClass().getResource("/images/footware.jpeg").toExternalForm()},
-                {"Jewelry",          getClass().getResource("/images/jawalery.jpeg").toExternalForm()}
+                {"Women",  getClass().getResource("/images/women-fashion.jpeg") != null ? getClass().getResource("/images/women-fashion.jpeg").toExternalForm() : ""},
+                {"Men",    getClass().getResource("/images/men.jpeg") != null ? getClass().getResource("/images/men.jpeg").toExternalForm() : ""},
+                {"Accessories", getClass().getResource("/images/accessories.jpeg") != null ? getClass().getResource("/images/accessories.jpeg").toExternalForm() : ""},
+                {"Footwear", getClass().getResource("/images/footware.jpeg") != null ? getClass().getResource("/images/footware.jpeg").toExternalForm() : ""},
+                {"Jewelry", getClass().getResource("/images/jawalery.jpeg") != null ? getClass().getResource("/images/jawalery.jpeg").toExternalForm() : ""}
         };
 
         for (int i = 0; i < categoryMappings.size(); i++) {
             CategoryMapping mapping = categoryMappings.get(i);
-            String imageUrl = i < categoryImages.length ? categoryImages[i][1] : "";
+            String imageUrl = i < categoryImages.length && !categoryImages[i][1].isEmpty() ? categoryImages[i][1] : "";
 
             StackPane card = createCategoryCard(mapping, imageUrl);
             HBox.setHgrow(card, Priority.ALWAYS);
@@ -804,27 +808,6 @@ public class SearchPage {
         return categoriesSection;
     }
 
-    private void loadCategoryChips() {
-        categoryChipsBox.getChildren().clear();
-
-        // Background image URLs per category (menggunakan warna gradient sebagai fallback)
-        String[][] categoryImages = {
-                {"Women's Fashion",  "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=300&q=80"},
-                {"Men's Fashion",    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=80"},
-                {"Accessories",      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300&q=80"},
-                {"Footwear",         "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80"},
-                {"Jewelry",          "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&q=80"}
-        };
-
-        for (int i = 0; i < categoryMappings.size(); i++) {
-            CategoryMapping mapping = categoryMappings.get(i);
-            String imageUrl = i < categoryImages.length ? categoryImages[i][1] : "";
-
-            StackPane card = createCategoryCard(mapping, imageUrl);
-            categoryChipsBox.getChildren().add(card);
-        }
-    }
-
     private StackPane createCategoryCard(CategoryMapping mapping, String imageUrl) {
         StackPane card = new StackPane();
         card.setPrefWidth(185);
@@ -836,7 +819,6 @@ public class SearchPage {
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.13), 10, 0, 0, 3);"
         );
 
-        // Clip rounded
         javafx.scene.shape.Rectangle cardClip = new javafx.scene.shape.Rectangle();
         cardClip.setArcWidth(36);
         cardClip.setArcHeight(36);
@@ -846,7 +828,6 @@ public class SearchPage {
         });
         card.setClip(cardClip);
 
-        // Gambar full card dengan blur
         javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView();
         imgView.setPreserveRatio(false);
         imgView.setEffect(new javafx.scene.effect.GaussianBlur(4));
@@ -854,10 +835,12 @@ public class SearchPage {
             imgView.setFitWidth(newVal.getWidth());
             imgView.setFitHeight(newVal.getHeight());
         });
-        javafx.scene.image.Image img = new javafx.scene.image.Image(imageUrl, 300, 300, false, true, true);
-        imgView.setImage(img);
 
-        // Dark overlay
+        if (!imageUrl.isEmpty()) {
+            javafx.scene.image.Image img = new javafx.scene.image.Image(imageUrl, 300, 300, false, true, true);
+            imgView.setImage(img);
+        }
+
         javafx.scene.shape.Rectangle overlay = new javafx.scene.shape.Rectangle();
         overlay.setFill(javafx.scene.paint.Color.rgb(0, 0, 0, 0.30));
         card.layoutBoundsProperty().addListener((obs, oldVal, newVal) -> {
@@ -865,7 +848,6 @@ public class SearchPage {
             overlay.setHeight(newVal.getHeight());
         });
 
-        // Konten: icon + teks di tengah
         VBox content = new VBox(8);
         content.setAlignment(Pos.CENTER);
 
@@ -888,7 +870,6 @@ public class SearchPage {
         content.getChildren().addAll(iconLabel, nameLabel);
         card.getChildren().addAll(imgView, overlay, content);
 
-        // Hover
         card.setOnMouseEntered(e -> {
             imgView.setEffect(new javafx.scene.effect.GaussianBlur(2));
             overlay.setFill(javafx.scene.paint.Color.rgb(139, 90, 43, 0.45));
@@ -988,7 +969,6 @@ public class SearchPage {
         return navBar;
     }
 
-    // ✅ HANYA SATU method createNavButton (yang sudah digabung)
     private Button createNavButton(String text, boolean isActive) {
         Button btn = new Button(text);
 
@@ -1128,44 +1108,12 @@ public class SearchPage {
     private void performSearchByCategory(CategoryMapping mapping) {
         List<Product> results = new ArrayList<>();
 
-        String targetCategory;
-        switch (mapping.displayName) {
-            case "Women's Fashion":
-                targetCategory = "Women";
-                break;
-            case "Men's Fashion":
-                targetCategory = "Men";
-                break;
-            case "Accessories":
-                targetCategory = "Accessories";
-                break;
-            case "Footwear":
-                targetCategory = "Footwear";
-                break;
-            case "Jewelry":
-                targetCategory = "Jewelry";
-                break;
-            default:
-                targetCategory = mapping.displayName;
-        }
+        String targetCategory = mapping.displayName;
 
         for (Product product : allProductsCache) {
             String productCategory = product.getCategory();
-            String productName = product.getName().toLowerCase();
-            boolean added = false;
-
             if (productCategory != null && productCategory.equalsIgnoreCase(targetCategory)) {
                 results.add(product);
-                added = true;
-            }
-            else if (!added) {
-                for (String keyword : mapping.keywords) {
-                    if ((productCategory != null && productCategory.toLowerCase().contains(keyword.toLowerCase())) ||
-                            productName.contains(keyword.toLowerCase())) {
-                        results.add(product);
-                        break;
-                    }
-                }
             }
         }
 
@@ -1239,7 +1187,6 @@ public class SearchPage {
             grid.add(card, col, row);
             productCards.add(card);
 
-            // Add click handler to select card
             final int index = productCards.size() - 1;
             card.setOnMouseClicked(e -> {
                 if (currentSelectedCardIndex >= 0 && currentSelectedCardIndex < productCards.size()) {
@@ -1262,7 +1209,6 @@ public class SearchPage {
 
         resultsBox.getChildren().add(grid);
 
-        // Auto-select first product
         if (!productCards.isEmpty()) {
             currentSelectedCardIndex = 0;
             applyCardSelectionStyle();
@@ -1388,7 +1334,38 @@ public class SearchPage {
         card.setAlignment(Pos.CENTER);
         card.setMaxWidth(280);
 
-        Label imagePlaceholder = createImagePlaceholder(product);
+        // Image Container seperti di HomePage
+        StackPane imageContainer = new StackPane();
+        imageContainer.setPrefSize(180, 180);
+        imageContainer.setStyle("-fx-background-color: #F5F0EA; -fx-background-radius: 12;");
+
+        Rectangle clip = new Rectangle(180, 180);
+        clip.setArcWidth(16);
+        clip.setArcHeight(16);
+        imageContainer.setClip(clip);
+
+        try {
+            String rawPath = product.getImageUrl();
+            String imagePath = rawPath.startsWith("/") ? rawPath : "/images/" + rawPath;
+            InputStream imgStream = getClass().getResourceAsStream(imagePath);
+            if (imgStream != null) {
+                Image img = new Image(imgStream);
+                ImageView imageView = new ImageView(img);
+                imageView.setFitWidth(180);
+                imageView.setFitHeight(180);
+                imageView.setPreserveRatio(true);
+                imageView.setSmooth(true);
+                imageContainer.getChildren().add(imageView);
+            } else {
+                Label fb = new Label("🛍️");
+                fb.setStyle("-fx-font-size: 60px;");
+                imageContainer.getChildren().add(fb);
+            }
+        } catch (Exception ex) {
+            Label fb = new Label("🛍️");
+            fb.setStyle("-fx-font-size: 60px;");
+            imageContainer.getChildren().add(fb);
+        }
 
         Label nameLabel = new Label(product.getName());
         nameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + Styles.TEXT_DARK + ";");
@@ -1428,7 +1405,7 @@ public class SearchPage {
 
         buttonBox.getChildren().addAll(addToCartBtn, buyNowBtn);
 
-        card.getChildren().addAll(imagePlaceholder, nameLabel, categoryLabel, priceBox, buttonBox);
+        card.getChildren().addAll(imageContainer, nameLabel, categoryLabel, priceBox, buttonBox);
 
         return card;
     }
@@ -1515,34 +1492,6 @@ public class SearchPage {
     private String formatPrice(double price) {
         if (price <= 0) return "Rp 0";
         return String.format("Rp %,.0f", price).replace(",", ".");
-    }
-
-    private Label createImagePlaceholder(Product product) {
-        String icon = getProductIcon(product);
-        Label imagePlaceholder = new Label(icon);
-        imagePlaceholder.setStyle("-fx-font-size: 55px; -fx-alignment: center;");
-        imagePlaceholder.setMaxWidth(Double.MAX_VALUE);
-        return imagePlaceholder;
-    }
-
-    private String getProductIcon(Product product) {
-        String icon = product.getImageUrl();
-        if (icon != null && !icon.isEmpty()) return icon;
-
-        String category = product.getCategory();
-        String name = product.getName().toLowerCase();
-
-        if (name.contains("blazer") || name.contains("blouse") || name.contains("dress")) return "👗";
-        if (name.contains("jacket") || name.contains("cargo")) return "👔";
-        if (name.contains("bag") || name.contains("scarf") || name.contains("hat")) return "👜";
-        if (name.contains("sneakers") || name.contains("shoe")) return "👟";
-        if (name.contains("necklace") || name.contains("ring") || name.contains("earring")) return "💍";
-        if ("Women".equals(category)) return "👗";
-        if ("Men".equals(category)) return "👔";
-        if ("Accessories".equals(category)) return "👜";
-        if ("Footwear".equals(category)) return "👟";
-        if ("Jewelry".equals(category)) return "💍";
-        return "👕";
     }
 
     private void loadRecentSearches() {

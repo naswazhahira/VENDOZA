@@ -8,6 +8,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
+import javafx.stage.Screen;
 
 public class RegisterPage {
 
@@ -18,31 +19,31 @@ public class RegisterPage {
     private Label messageLabel;
 
     public Scene getScene() {
-        // Root Layout dengan BorderPane
-        BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: #E8DCD0;");
 
-        // === HEADER DENGAN BACK BUTTON ===
-        HBox header = createHeader();
-        root.setTop(header);
+        double screenWidth = Screen.getPrimary().getBounds().getWidth();
+        double screenHeight = Screen.getPrimary().getBounds().getHeight();
 
-        // === MAIN CONTENT (FORM REGISTER) DENGAN SCROLLPANE ===
-        VBox centerContent = createRegisterForm();
+        HBox navBar = createNavBar();
 
-        // TAMBAHKAN SCROLLPANE AGAR BISA DISCROLL
-        ScrollPane scrollPane = new ScrollPane(centerContent);
+        ScrollPane scrollPane = new ScrollPane(createContent());
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: #E8DCD0; -fx-background: #E8DCD0;");
+        scrollPane.setStyle("-fx-background-color: #ebddc3; -fx-background: #ebddc3;");
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setBorder(Border.EMPTY);
 
-        root.setCenter(scrollPane);
+        VBox mainLayout = new VBox(navBar, scrollPane);
+        mainLayout.setStyle("-fx-background-color: #ebddc3;");
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        Scene scene = new Scene(root, 1200, 700);
-        scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+        Scene scene = new Scene(mainLayout, screenWidth, screenHeight);
 
-        // === FITUR BARU: TEKAN ENTER UNTUK REGISTER ===
-        // Mendaftarkan event listener global pada scene agar mendeteksi ketukan tombol keyboard
+        // CSS dengan pengecekan null
+        java.net.URL cssUrl = getClass().getResource("/styles.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
+
+        // TEKAN ENTER UNTUK REGISTER
         scene.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 handleRegister();
@@ -52,95 +53,57 @@ public class RegisterPage {
         return scene;
     }
 
-    private HBox createHeader() {
-        HBox header = new HBox(15);
-        header.setPadding(new Insets(15, 40, 15, 40));
-        header.setAlignment(Pos.CENTER_LEFT);
-        header.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
-
-        // BACK BUTTON - Kembali ke HomePage
-        Button backBtn = new Button("← Back to Home");
+    private HBox createNavBar() {
+        HBox navBar = new HBox(30);
+        navBar.setAlignment(Pos.CENTER_LEFT);
+        navBar.setPadding(new Insets(16, 50, 16, 22));
+        navBar.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);"
+        );
+        
+        Button backBtn = new Button("❮");
         backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
-                "-fx-font-size: 14px; -fx-cursor: hand; -fx-font-weight: bold;");
+                "-fx-font-size: 24px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 0 8 0 0;");
 
-        backBtn.setOnMouseEntered(e -> {
-            backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
-                    "-fx-font-size: 14px; -fx-cursor: hand; -fx-font-weight: bold;");
-            backBtn.setScaleX(1.05);
-            backBtn.setScaleY(1.05);
-        });
-
-        backBtn.setOnMouseExited(e -> {
-            backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.BROWN_DARK + ";" +
-                    "-fx-font-size: 14px; -fx-cursor: hand; -fx-font-weight: bold;");
-            backBtn.setScaleX(1);
-            backBtn.setScaleY(1);
-        });
-
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #D4A853;" +
+                        "-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Georgia'; " +
+                        "-fx-padding: 0 10 0 0; -fx-cursor: hand;"
+        ));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #3E2723;" +
+                        "-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Georgia'; " +
+                        "-fx-padding: 0 10 0 0; -fx-cursor: hand;"
+        ));
         backBtn.setOnAction(e -> SceneManager.showHomePage());
+        
+        Label logo = new Label("VENDOZA");
+        logo.setStyle(
+                "-fx-font-size: 24px; -fx-font-weight: bold;" +
+                        "-fx-text-fill: #3E2723; -fx-font-family: 'Georgia';"
+        );
+        
+        HBox logoGroup = new HBox(4);
+        logoGroup.setAlignment(Pos.CENTER_LEFT);
+        logoGroup.getChildren().addAll(backBtn, logo);
 
-        // Navigation Buttons (seperti di HomePage)
-        Region leftSpacer = new Region();
-        HBox.setHgrow(leftSpacer, Priority.ALWAYS);
-
-        Button homeBtn = createNavButton("🏠 Home", false);
-        Button searchBtn = createNavButton("🔍 Search", false);
-        Button cartBtn = createNavButton("🛒 Cart", false);
-        Button profileBtn = createNavButton("👤 Profile", false);
-
-        homeBtn.setOnAction(e -> SceneManager.showHomePage());
-        searchBtn.setOnAction(e -> SceneManager.setScene(new SearchPage().getScene()));
-        cartBtn.setOnAction(e -> {
-            if (AuthService.isLoggedIn()) {
-                SceneManager.setScene(new CartPage().getScene());
-            } else {
-                showLoginAlert();
-            }
-        });
-        profileBtn.setOnAction(e -> {
-            if (AuthService.isLoggedIn()) {
-                SceneManager.setScene(new ProfilePage().getScene());
-            } else {
-                showLoginAlert();
-            }
-        });
-
-        Region rightSpacer = new Region();
-        HBox.setHgrow(rightSpacer, Priority.ALWAYS);
-
-        Label logo = new Label("👗 VENDOZA");
-        logo.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
-
-        header.getChildren().addAll(backBtn, leftSpacer, homeBtn, searchBtn, cartBtn, profileBtn, rightSpacer, logo);
-        return header;
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        navBar.getChildren().addAll(logoGroup, spacer);
+        return navBar;
     }
 
-    private Button createNavButton(String text, boolean isActive) {
-        Button btn = new Button(text);
-        if (isActive) {
-            btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
-                    "-fx-font-size: 14px; -fx-font-weight: bold; -fx-border-color: " + Styles.GOLD + ";" +
-                    "-fx-border-width: 0 0 2 0; -fx-border-style: solid; -fx-cursor: hand;");
-        } else {
-            btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
-                    "-fx-font-size: 14px; -fx-cursor: hand;");
+    private VBox createContent() {
+        VBox content = new VBox(30);
+        content.setPadding(new Insets(40, 80, 60, 80));
+        content.setStyle("-fx-background-color: #ebddc3;");
+        content.setAlignment(Pos.CENTER);
 
-            btn.setOnMouseEntered(e -> {
-                btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.GOLD + ";" +
-                        "-fx-font-size: 14px; -fx-cursor: hand;");
-                btn.setScaleX(1.05);
-                btn.setScaleY(1.05);
-            });
-
-            btn.setOnMouseExited(e -> {
-                btn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + Styles.TEXT_DARK + ";" +
-                        "-fx-font-size: 14px; -fx-cursor: hand;");
-                btn.setScaleX(1);
-                btn.setScaleY(1);
-            });
-        }
-        return btn;
+        VBox registerForm = createRegisterForm();
+        content.getChildren().add(registerForm);
+        return content;
     }
 
     private VBox createRegisterForm() {
@@ -290,9 +253,5 @@ public class RegisterPage {
             messageLabel.setStyle("-fx-text-fill: " + Styles.ERROR_RED + ";");
             messageLabel.setText("❌ Username already exists!");
         }
-    }
-
-    private void showLoginAlert() {
-        LoginRequiredDialog.show("You need to login to access this feature.");
     }
 }

@@ -15,11 +15,16 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+import javafx.stage.Screen;
 import javafx.util.Duration;
 
 public class ProfilePage {
 
     public Scene getScene() {
+
+        double screenWidth = Screen.getPrimary().getBounds().getWidth();
+        double screenHeight = Screen.getPrimary().getBounds().getHeight();
+
         if (!AuthService.isLoggedIn()) {
             showLoginRequiredAlert();
             return new LoginPage().getScene();
@@ -31,7 +36,7 @@ public class ProfilePage {
 
         VBox mainContent = new VBox(15);
         mainContent.setPadding(new Insets(20, 40, 40, 40));
-        mainContent.setStyle("-fx-background-color: #E8DCD0;");
+        mainContent.setStyle("-fx-background-color: #ebddc3;");
         mainContent.setFillWidth(true);
 
         HBox profileHeader = createProfileHeader(currentUser);
@@ -50,7 +55,7 @@ public class ProfilePage {
         VBox root = new VBox(navBar, scrollPane);
         root.setStyle("-fx-background-color: #E8DCD0;");
 
-        Scene scene = new Scene(root, 1200, 700);
+        Scene scene = new Scene(root, screenWidth, screenHeight);
         return scene;
     }
 

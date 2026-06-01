@@ -9,20 +9,20 @@ public class AuthService {
     private static User currentUser = null;
 
     static {
-        // Dummy user
-        users.add(new User("fashionista", "password123", "fashionista@email.com"));
-        users.add(new User("stylish", "abc123", "stylish@email.com"));
+        users.add(new User("fashionista", "password123", "fashionista@email.com", "USER"));
+        users.add(new User("stylish", "abc123", "stylish@email.com", "USER"));
+        users.add(new User("admin", "admin123", "admin@vendoza.com", "ADMIN"));
+        users.add(new User("superadmin", "super123", "super@vendoza.com", "ADMIN"));
     }
 
     public static boolean register(String username, String password, String email) {
-        // Cek apakah username sudah ada
         for (User u : users) {
             if (u.getUsername().equals(username)) {
                 return false;
             }
         }
 
-        User newUser = new User(username, password, email);
+        User newUser = new User(username, password, email, "USER"); // default role USER
         users.add(newUser);
         return true;
     }
@@ -48,6 +48,10 @@ public class AuthService {
     public static boolean isLoggedIn() {
         return currentUser != null;
     }
+    
+    public static boolean isAdmin() {
+        return currentUser != null && currentUser.isAdmin();
+    }
 
     public static boolean updateProfile(String username, String phone, String address) {
         if (currentUser != null) {
@@ -57,5 +61,16 @@ public class AuthService {
             return true;
         }
         return false;
+    }
+
+    public static List<User> getAllUsers() {
+        return new ArrayList<>(users);
+    }
+
+    public static boolean deleteUser(String username) {
+        if ("admin".equals(username)) {
+            return false;
+        }
+        return users.removeIf(u -> u.getUsername().equals(username));
     }
 }

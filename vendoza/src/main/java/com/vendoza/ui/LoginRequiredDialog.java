@@ -1,117 +1,140 @@
-    package com.vendoza.ui;
+package com.vendoza.ui;
 
-    import javafx.animation.ScaleTransition;
-    import javafx.geometry.Insets;
-    import javafx.geometry.Pos;
-    import javafx.scene.Scene;
-    import javafx.scene.control.Button;
-    import javafx.scene.control.Label;
-    import javafx.scene.effect.DropShadow;
-    import javafx.scene.layout.BorderPane;
-    import javafx.scene.layout.HBox;
-    import javafx.scene.layout.VBox;
-    import javafx.scene.paint.Color;
-    import javafx.scene.shape.Circle;
-    import javafx.stage.Modality;
-    import javafx.stage.Stage;
-    import javafx.stage.StageStyle;
-    import javafx.util.Duration;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
-    public class LoginRequiredDialog {
+public class LoginRequiredDialog {
 
-        public static void show(String message) {
-            Stage dialogStage = new Stage();
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initStyle(StageStyle.TRANSPARENT);
+    private static final String BORDER_COLOR = "#C4A484";
 
-            // Icon circle dengan background gold
-            Circle iconCircle = new Circle(40);
-            iconCircle.setFill(Color.web(Styles.GOLD));
-            iconCircle.setEffect(new DropShadow(10, Color.rgb(0, 0, 0, 0.2)));
+    public static void show(String message) {
+        Stage dialogStage = new Stage();
+        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        dialogStage.initStyle(StageStyle.TRANSPARENT);
 
-            Label iconLabel = new Label("🔐");
-            iconLabel.setStyle("-fx-font-size: 40px;");
-            iconLabel.setTranslateY(-40);
+        VBox root = new VBox(16);
+        root.setAlignment(Pos.CENTER);
+        root.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 20;" +
+                        "-fx-border-color: " + BORDER_COLOR + ";" +
+                        "-fx-border-width: 1.5;" +
+                        "-fx-border-radius: 20;" +
+                        "-fx-padding: 30 40 30 40;"
+        );
+        root.setEffect(new DropShadow(15, Color.rgb(0, 0, 0, 0.15)));
 
-            // Stack icon
-            BorderPane iconPane = new BorderPane();
-            iconPane.setCenter(iconCircle);
-            iconPane.getChildren().add(iconLabel);
+        Label titleLabel = new Label("Login Required");
+        titleLabel.setStyle(
+                "-fx-font-size: 18px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-text-fill: #3E2723;" +
+                        "-fx-font-family: 'Georgia';"
+        );
 
-            // Title
-            Label titleLabel = new Label("Login Required");
-            titleLabel.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
+        Label messageLabel = new Label(message);
+        messageLabel.setStyle(
+                "-fx-font-size: 13px;" +
+                        "-fx-text-fill: #5D4037;" +
+                        "-fx-wrap-text: true;"
+        );
+        messageLabel.setMaxWidth(300);
+        messageLabel.setAlignment(Pos.CENTER);
 
-            // Message
-            Label messageLabel = new Label(message);
-            messageLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: " + Styles.TEXT_DARK + ";");
-            messageLabel.setWrapText(true);
-            messageLabel.setMaxWidth(320);
-            messageLabel.setAlignment(Pos.CENTER);
+        Button loginBtn = new Button("Login");
+        loginBtn.setStyle(
+                "-fx-background-color: #3E2723;" +
+                        "-fx-text-fill: #D4A853;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 25;" +
+                        "-fx-padding: 10 30;" +
+                        "-fx-cursor: hand;"
+        );
+        loginBtn.setOnMouseEntered(e -> loginBtn.setStyle(
+                "-fx-background-color: #D4A853;" +
+                        "-fx-text-fill: #2C1810;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 25;" +
+                        "-fx-padding: 10 30;" +
+                        "-fx-cursor: hand;"
+        ));
+        loginBtn.setOnMouseExited(e -> loginBtn.setStyle(
+                "-fx-background-color: #3E2723;" +
+                        "-fx-text-fill: #D4A853;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 25;" +
+                        "-fx-padding: 10 30;" +
+                        "-fx-cursor: hand;"
+        ));
+        loginBtn.setOnAction(e -> {
+            dialogStage.close();
+            SceneManager.setScene(new LoginPage().getScene());
+        });
 
-            // Buttons
-            Button loginBtn = new Button("Login Now");
-            loginBtn.setStyle(Styles.buttonStyle());
-            loginBtn.setPrefWidth(140);
-            loginBtn.setOnMouseEntered(e -> {
-                loginBtn.setStyle(Styles.buttonHoverStyle());
-                ScaleTransition st = new ScaleTransition(Duration.millis(200), loginBtn);
-                st.setToX(1.05);
-                st.setToY(1.05);
-                st.play();
-            });
-            loginBtn.setOnMouseExited(e -> {
-                loginBtn.setStyle(Styles.buttonStyle());
-                ScaleTransition st = new ScaleTransition(Duration.millis(200), loginBtn);
-                st.setToX(1);
-                st.setToY(1);
-                st.play();
-            });
-            loginBtn.setOnAction(e -> {
-                dialogStage.close();
-                SceneManager.setScene(new LoginPage().getScene());
-            });
+        Button cancelBtn = new Button("Cancel");
+        cancelBtn.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-text-fill: #8D6E63;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 25;" +
+                        "-fx-padding: 10 25;" +
+                        "-fx-cursor: hand;" +
+                        "-fx-border-color: #C4A484;" +
+                        "-fx-border-width: 1;" +
+                        "-fx-border-radius: 25;"
+        );
+        cancelBtn.setOnMouseEntered(e -> cancelBtn.setStyle(
+                "-fx-background-color: #EFEBE9;" +
+                        "-fx-text-fill: #3E2723;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 25;" +
+                        "-fx-padding: 10 25;" +
+                        "-fx-cursor: hand;" +
+                        "-fx-border-color: #C4A484;" +
+                        "-fx-border-width: 1;" +
+                        "-fx-border-radius: 25;"
+        ));
+        cancelBtn.setOnMouseExited(e -> cancelBtn.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-text-fill: #8D6E63;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 25;" +
+                        "-fx-padding: 10 25;" +
+                        "-fx-cursor: hand;" +
+                        "-fx-border-color: #C4A484;" +
+                        "-fx-border-width: 1;" +
+                        "-fx-border-radius: 25;"
+        ));
+        cancelBtn.setOnAction(e -> dialogStage.close());
 
-            Button cancelBtn = new Button("Maybe Later");
-            cancelBtn.setStyle(Styles.outlineButtonStyle());
-            cancelBtn.setPrefWidth(140);
-            cancelBtn.setOnMouseEntered(e -> cancelBtn.setStyle("-fx-background-color: " + Styles.BROWN_LIGHT + ";" +
-                    "-fx-text-fill: " + Styles.BROWN_DARK + ";-fx-border-color: " + Styles.BROWN_DARK + ";" +
-                    "-fx-border-radius: 25;-fx-padding: 8 20;-fx-cursor: hand;"));
-            cancelBtn.setOnMouseExited(e -> cancelBtn.setStyle(Styles.outlineButtonStyle()));
-            cancelBtn.setOnAction(e -> dialogStage.close());
+        javafx.scene.layout.HBox buttonBox = new javafx.scene.layout.HBox(15);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.getChildren().addAll(loginBtn, cancelBtn);
 
-            HBox buttonBox = new HBox(15, loginBtn, cancelBtn);
-            buttonBox.setAlignment(Pos.CENTER);
+        root.getChildren().addAll(titleLabel, messageLabel, buttonBox);
 
-            // Content
-            VBox contentBox = new VBox(15, iconPane, titleLabel, messageLabel, buttonBox);
-            contentBox.setAlignment(Pos.CENTER);
-            contentBox.setPadding(new Insets(30, 40, 35, 40));
-            contentBox.setStyle("-fx-background-color: " + Styles.WHITE + ";" +
-                    "-fx-background-radius: 20;" +
-                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 25, 0, 0, 10);");
+        Scene scene = new Scene(root);
+        scene.setFill(Color.TRANSPARENT);
+        dialogStage.setScene(scene);
 
-            // Animasi masuk
-            ScaleTransition scaleIn = new ScaleTransition(Duration.millis(300), contentBox);
-            scaleIn.setFromX(0.8);
-            scaleIn.setFromY(0.8);
-            scaleIn.setToX(1);
-            scaleIn.setToY(1);
-            scaleIn.play();
+        dialogStage.sizeToScene();   
+        dialogStage.centerOnScreen();
 
-            BorderPane root = new BorderPane();
-            root.setCenter(contentBox);
-            root.setStyle("-fx-background-color: transparent;");
-
-            Scene scene = new Scene(root);
-            scene.setFill(null);
-
-            dialogStage.setScene(scene);
-            dialogStage.showAndWait();
-        }
-
-        public static void show() {
-            show("You need to login to access this feature.");
-        }
+        dialogStage.showAndWait();
     }
+}

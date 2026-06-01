@@ -1,0 +1,45 @@
+.root {
+    -fx-font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+@font-face {
+    font-family: 'GeorgiaCustom';
+    src: url('fonts/Georgia.ttf');
+}
+
+.product-name-home {
+    -fx-font-family: 'Georgia';
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3E2723;
+}
+
+.navbar-logo {
+    -fx-font-family: 'Georgia';
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3E2723;
+}
+
+.banner-title {
+    -fx-text-fill: white;
+    -fx-font-size: 42px;
+    -fx-font-weight: bold;
+    -fx-font-family: 'Georgia'; /* Memakai font Georgia */
+    -fx-line-spacing: 6;        /* Angka murni tanpa 'px' */
+}
+
+.comment-input {
+    -fx-background-color: transparent;
+}
+
+.comment-input .content {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.comment-input:focused .content {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}

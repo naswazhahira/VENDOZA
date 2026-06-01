@@ -12,11 +12,15 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.util.Duration;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +53,6 @@ public class CartPage {
     private final Map<Product, CheckBox> itemCheckboxes = new HashMap<>();
     private Scene currentScene;
 
-    //  ENTRY POINT
     public Scene getScene() {
         if (!AuthService.isLoggedIn()) {
             LoginRequiredDialog.show("Please login to access your cart.");
@@ -60,12 +63,12 @@ public class CartPage {
         double screenHeight = Screen.getPrimary().getBounds().getHeight();
 
         rootStackPane = new StackPane();
-        rootStackPane.setStyle("-fx-background-color: #F0E8DF;");
+        rootStackPane.setStyle("-fx-background-color: #ebddc3;");
 
         HBox navBar = createNavBar();
 
         VBox mainContent = new VBox(0);
-        mainContent.setStyle("-fx-background-color: #F0E8DF;");
+        mainContent.setStyle("-fx-background-color: #ebddc3;");
 
         HBox pageHeader = new HBox(16);
         pageHeader.setAlignment(Pos.CENTER_LEFT);
@@ -101,7 +104,7 @@ public class CartPage {
         pageHeader.getChildren().addAll(cartIcon, titleBox);
         HBox body = new HBox(30);
         body.setPadding(new Insets(40, 50, 120, 50));
-        body.setStyle("-fx-background-color: #F0E8DF;");
+        body.setStyle("-fx-background-color: #ebddc3;");
         body.setAlignment(Pos.TOP_LEFT);
 
         VBox leftPanel = new VBox(0);
@@ -120,7 +123,7 @@ public class CartPage {
 
         ScrollPane pageScroll = new ScrollPane(mainContent);
         pageScroll.setFitToWidth(true);
-        pageScroll.setStyle("-fx-background-color: #F0E8DF; -fx-background: #F0E8DF;");
+        pageScroll.setStyle("-fx-background-color: #ebddc3; -fx-background: #ebddc3;");
         pageScroll.setHbarPolicy(ScrollBarPolicy.NEVER);
         pageScroll.setBorder(Border.EMPTY);
 
@@ -134,13 +137,16 @@ public class CartPage {
         rootStackPane.getChildren().addAll(fullContentLayout, customPopupToast);
 
         currentScene = new Scene(rootStackPane, screenWidth, screenHeight);
-        currentScene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+
+        java.net.URL cssUrl = getClass().getResource("/styles.css");
+        if (cssUrl != null) {
+            currentScene.getStylesheets().add(cssUrl.toExternalForm());
+        }
 
         refreshCart();
         return currentScene;
     }
 
-    //  CUSTOM DIALOG KONFIRMASI BERGAYA VENDOZA
     private boolean showConfirmDialog(String title, String message, String confirmText) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("");
@@ -209,7 +215,6 @@ public class CartPage {
         return result.isPresent() && result.get() == confirmBtnType;
     }
 
-    //  CUSTOM POPUP TOAST
     private void buildCustomPopupToast() {
         customPopupToast = new VBox(10);
         customPopupToast.setAlignment(Pos.CENTER);
@@ -268,7 +273,6 @@ public class CartPage {
         }
     }
 
-    //  CHECKOUT ACTION
     private void handleCheckoutAction() {
         List<CartItem> selected = getSelectedCartItems();
         if (selected.isEmpty()) {
@@ -278,7 +282,6 @@ public class CartPage {
         }
     }
 
-    //  COLUMN HEADER
     private HBox buildColumnHeader() {
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
@@ -329,7 +332,6 @@ public class CartPage {
         return header;
     }
 
-    //  SIDEBAR
     private VBox buildSidebar() {
         VBox sidebar = new VBox(16);
         sidebar.setPadding(new Insets(26));
@@ -429,7 +431,6 @@ public class CartPage {
         return row;
     }
 
-    //  BOTTOM BAR
     private HBox buildBottomBar() {
         HBox bar = new HBox(20);
         bar.setAlignment(Pos.CENTER_LEFT);
@@ -506,7 +507,6 @@ public class CartPage {
         return bar;
     }
 
-    //  REFRESH CART
     private void refreshCart() {
         cartItemsContainer.getChildren().clear();
         itemCheckboxes.clear();
@@ -574,7 +574,6 @@ public class CartPage {
         return emptyBox;
     }
 
-    //  CART ROW
     private HBox createCartRow(CartItem item) {
         Product product = item.getProduct();
 
@@ -609,11 +608,59 @@ public class CartPage {
         productSection.setAlignment(Pos.CENTER_LEFT);
         productSection.setPrefWidth(380);
 
-        Label imgLabel = new Label(product.getImageUrl());
-        imgLabel.setStyle(
-                "-fx-font-size: 36px; -fx-background-color: #F5F0EA; " +
-                        "-fx-background-radius: 12; -fx-padding: 8 12;"
-        );
+        // GAMBAR PRODUK (bukan emoji)
+        StackPane imageContainer = new StackPane();
+        imageContainer.setPrefSize(60, 60);
+        imageContainer.setMinSize(60, 60);
+        imageContainer.setStyle("-fx-background-color: #F5F0EA; -fx-background-radius: 12;");
+
+        Rectangle clip = new Rectangle(60, 60);
+        clip.setArcWidth(16);
+        clip.setArcHeight(16);
+        imageContainer.setClip(clip);
+
+        try {
+            String rawPath = product.getImageUrl();
+            String imagePath = null;
+
+            if (rawPath == null || rawPath.trim().isEmpty()) {
+                throw new IllegalArgumentException("Image URL is empty");
+            }
+
+            if (rawPath.startsWith("/")) {
+                imagePath = rawPath;
+            } else if (rawPath.startsWith("images/")) {
+                imagePath = "/" + rawPath;
+            } else {
+                imagePath = "/images/" + rawPath;
+            }
+
+            InputStream imgStream = getClass().getResourceAsStream(imagePath);
+            if (imgStream == null && !imagePath.equals(rawPath)) {
+                imgStream = getClass().getResourceAsStream(rawPath.startsWith("/") ? rawPath : "/" + rawPath);
+            }
+            if (imgStream == null) {
+                imgStream = getClass().getResourceAsStream("/" + rawPath.substring(rawPath.lastIndexOf("/") + 1));
+            }
+
+            if (imgStream != null) {
+                Image img = new Image(imgStream);
+                ImageView imageView = new ImageView(img);
+                imageView.setFitWidth(60);
+                imageView.setFitHeight(60);
+                imageView.setPreserveRatio(true);
+                imageView.setSmooth(true);
+                imageContainer.getChildren().add(imageView);
+            } else {
+                Label fb = new Label("🛍️");
+                fb.setStyle("-fx-font-size: 30px;");
+                imageContainer.getChildren().add(fb);
+            }
+        } catch (Exception ex) {
+            Label fb = new Label("🛍️");
+            fb.setStyle("-fx-font-size: 30px;");
+            imageContainer.getChildren().add(fb);
+        }
 
         VBox infoBox = new VBox(6);
         Label nameLabel = new Label(product.getName());
@@ -635,7 +682,7 @@ public class CartPage {
         } else {
             infoBox.getChildren().addAll(nameLabel, categoryLabel);
         }
-        productSection.getChildren().addAll(imgLabel, infoBox);
+        productSection.getChildren().addAll(imageContainer, infoBox);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -698,7 +745,6 @@ public class CartPage {
         return row;
     }
 
-    //  QTY CONTROL
     private HBox buildQtyControl(CartItem item, Product product) {
         HBox qtyBox = new HBox(10);
         qtyBox.setAlignment(Pos.CENTER);
@@ -750,7 +796,6 @@ public class CartPage {
         return qtyBox;
     }
 
-    //  HELPERS
     private void syncSelectAllState() {
         if (itemCheckboxes.isEmpty()) return;
         boolean allSelected = itemCheckboxes.values().stream().allMatch(CheckBox::isSelected);
@@ -834,7 +879,6 @@ public class CartPage {
         return selected;
     }
 
-    //  NAV BAR
     private HBox createNavBar() {
         HBox navBar = new HBox(30);
         navBar.setAlignment(Pos.CENTER_LEFT);

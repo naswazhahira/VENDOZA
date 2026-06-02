@@ -2,6 +2,7 @@ package com.vendoza.service;
 
 import com.vendoza.model.Order;
 import com.vendoza.model.Product;
+import com.vendoza.model.Review;
 import com.vendoza.model.User;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -177,8 +178,7 @@ public class DataService {
 
     public static List<Product> getRecommendedProducts() {
         refreshAllProducts();
-        // Ambil 8 produk pertama atau semua jika kurang dari 8
-        return cachedProducts.stream().limit(8).collect(Collectors.toList());
+        return cachedProducts.stream().limit(12).collect(Collectors.toList());
     }
 
     public static Product getProductById(Long id) {
@@ -339,5 +339,32 @@ public class DataService {
         String imageUrl;
         String category;
         Integer stock;
+    }
+
+    // ========== UPDATE PRODUCT REVIEWS DI CACHE ==========
+    public static void updateProductReviewsInCache(Product updatedProduct) {
+        // Cari product yang sama di cache berdasarkan ID
+        Product cachedProduct = productMap.get(updatedProduct.getId());
+
+        if (cachedProduct != null) {
+            // Sinkronkan reviews dari product yang diupdate
+            cachedProduct.getReviews().clear();
+            for (Review review : updatedProduct.getAllReviews()) {
+                cachedProduct.addReview(review);
+            }
+
+            // Update rating dan reviewCount
+            cachedProduct.setRating(updatedProduct.getAverageRating());
+            cachedProduct.setReviewCount(updatedProduct.getTotalReviewCount());
+
+            // Refresh cachedProducts
+            cachedProducts = new ArrayList<>(productMap.values());
+
+            System.out.println("Product cache updated: " + cachedProduct.getName() +
+                    " - New rating: " + cachedProduct.getAverageRating() +
+                    " (" + cachedProduct.getTotalReviewCount() + " reviews)");
+        } else {
+            System.out.println("Product not found in cache: " + updatedProduct.getId());
+        }
     }
 }

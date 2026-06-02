@@ -4,6 +4,8 @@ import com.vendoza.model.Product;
 import com.vendoza.service.AuthService;
 import com.vendoza.service.CartService;
 import com.vendoza.service.DataService;
+import javafx.animation.ScaleTransition;
+import javafx.util.Duration;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -767,128 +769,126 @@ public class SearchPage {
         Label categoriesLabel = new Label("Shop by Category");
         categoriesLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
 
-        HBox cardsBox = new HBox();
-        cardsBox.setAlignment(Pos.CENTER);
-        cardsBox.setSpacing(0);
-        cardsBox.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(cardsBox, Priority.ALWAYS);
-
-        categoryChipsBox = new FlowPane();
-        categoryChipsBox.setVisible(false);
-        categoryChipsBox.setManaged(false);
-
-        String[][] categoryImages = {
-                {"Women",  getClass().getResource("/images/women-fashion.jpeg") != null ? getClass().getResource("/images/women-fashion.jpeg").toExternalForm() : ""},
-                {"Men",    getClass().getResource("/images/men.jpeg") != null ? getClass().getResource("/images/men.jpeg").toExternalForm() : ""},
-                {"Accessories", getClass().getResource("/images/accessories.jpeg") != null ? getClass().getResource("/images/accessories.jpeg").toExternalForm() : ""},
-                {"Footwear", getClass().getResource("/images/footware.jpeg") != null ? getClass().getResource("/images/footware.jpeg").toExternalForm() : ""},
-                {"Jewelry", getClass().getResource("/images/jawalery.jpeg") != null ? getClass().getResource("/images/jawalery.jpeg").toExternalForm() : ""}
-        };
+        HBox categoryContainer = new HBox(20);
+        categoryContainer.setAlignment(Pos.CENTER);
+        categoryContainer.setPadding(new Insets(10, 0, 10, 0));
+        categoryContainer.setMaxWidth(Double.MAX_VALUE);
 
         for (int i = 0; i < categoryMappings.size(); i++) {
             CategoryMapping mapping = categoryMappings.get(i);
-            String imageUrl = i < categoryImages.length && !categoryImages[i][1].isEmpty() ? categoryImages[i][1] : "";
+            String imagePath = getCategoryImagePath(mapping.displayName);
+            StackPane card = createCategoryCard(mapping, imagePath);
 
-            StackPane card = createCategoryCard(mapping, imageUrl);
-            HBox.setHgrow(card, Priority.ALWAYS);
+            card.setPrefWidth(220);
+            card.setMinWidth(180);
+            card.setPrefHeight(220);
+            card.setMinHeight(180);
             card.setMaxWidth(Double.MAX_VALUE);
 
-            cardsBox.getChildren().add(card);
-
-            if (i < categoryMappings.size() - 1) {
-                Region spacer = new Region();
-                spacer.setPrefWidth(15);
-                spacer.setMinWidth(15);
-                spacer.setMaxWidth(15);
-                cardsBox.getChildren().add(spacer);
-            }
+            HBox.setHgrow(card, Priority.ALWAYS);
+            categoryContainer.getChildren().add(card);
         }
 
-        categoriesSection.getChildren().addAll(categoriesLabel, cardsBox);
+        categoriesSection.getChildren().addAll(categoriesLabel, categoryContainer);
         return categoriesSection;
+    }
+
+    private String getCategoryImagePath(String categoryName) {
+        String imagePath = "/images/";
+        switch (categoryName.toLowerCase()) {
+            case "women": imagePath += "women-fashion.jpeg"; break;
+            case "men": imagePath += "men.jpeg"; break;
+            case "accessories": imagePath += "accessories.jpeg"; break;
+            case "footwear": imagePath += "footware.jpeg"; break;
+            case "jewelry": imagePath += "jawalery.jpeg"; break;
+            default: return null;
+        }
+
+        if (getClass().getResource(imagePath) != null) {
+            return getClass().getResource(imagePath).toExternalForm();
+        }
+        return null;
     }
 
     private StackPane createCategoryCard(CategoryMapping mapping, String imageUrl) {
         StackPane card = new StackPane();
-        card.setPrefWidth(185);
-        card.setPrefHeight(200);
-        card.setMaxWidth(Double.MAX_VALUE);
         card.setStyle(
                 "-fx-background-radius: 18;" +
                         "-fx-cursor: hand;" +
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.13), 10, 0, 0, 3);"
         );
 
-        javafx.scene.shape.Rectangle cardClip = new javafx.scene.shape.Rectangle();
-        cardClip.setArcWidth(36);
-        cardClip.setArcHeight(36);
+        Rectangle cardClip = new Rectangle();
+        cardClip.setArcWidth(18);
+        cardClip.setArcHeight(18);
         card.layoutBoundsProperty().addListener((obs, oldVal, newVal) -> {
             cardClip.setWidth(newVal.getWidth());
             cardClip.setHeight(newVal.getHeight());
         });
         card.setClip(cardClip);
 
-        javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView();
-        imgView.setPreserveRatio(false);
-        imgView.setEffect(new javafx.scene.effect.GaussianBlur(4));
-        card.layoutBoundsProperty().addListener((obs, oldVal, newVal) -> {
-            imgView.setFitWidth(newVal.getWidth());
-            imgView.setFitHeight(newVal.getHeight());
-        });
-
-        if (!imageUrl.isEmpty()) {
-            javafx.scene.image.Image img = new javafx.scene.image.Image(imageUrl, 300, 300, false, true, true);
-            imgView.setImage(img);
+        Region background = new Region();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            background.setStyle(
+                    "-fx-background-image: url('" + imageUrl + "');" +
+                            "-fx-background-size: cover;" +
+                            "-fx-background-position: center;"
+            );
+        } else {
+            background.setStyle("-fx-background-color: " + mapping.bgColor + ";");
         }
+        background.prefWidthProperty().bind(card.widthProperty());
+        background.prefHeightProperty().bind(card.heightProperty());
 
-        javafx.scene.shape.Rectangle overlay = new javafx.scene.shape.Rectangle();
-        overlay.setFill(javafx.scene.paint.Color.rgb(0, 0, 0, 0.30));
-        card.layoutBoundsProperty().addListener((obs, oldVal, newVal) -> {
-            overlay.setWidth(newVal.getWidth());
-            overlay.setHeight(newVal.getHeight());
-        });
+        Region overlay = new Region();
+        overlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.35);");
+        overlay.prefWidthProperty().bind(card.widthProperty());
+        overlay.prefHeightProperty().bind(card.heightProperty());
 
         VBox content = new VBox(8);
         content.setAlignment(Pos.CENTER);
 
         Label iconLabel = new Label(mapping.icon);
-        iconLabel.setStyle("-fx-font-size: 36px;");
+        iconLabel.setStyle("-fx-font-size: 48px;");
 
-        Label nameLabel = new Label(mapping.displayName.replace(" ", "\n"));
+        Label nameLabel = new Label(mapping.displayName);
         nameLabel.setStyle(
-                "-fx-font-size: 14px;" +
+                "-fx-font-size: 16px;" +
                         "-fx-font-weight: bold;" +
                         "-fx-text-fill: white;" +
                         "-fx-font-family: 'Segoe UI';" +
-                        "-fx-text-alignment: center;" +
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 4, 0, 0, 1);"
         );
         nameLabel.setAlignment(Pos.CENTER);
-        nameLabel.setWrapText(true);
-        nameLabel.setMaxWidth(160);
 
         content.getChildren().addAll(iconLabel, nameLabel);
-        card.getChildren().addAll(imgView, overlay, content);
+
+        card.getChildren().addAll(background, overlay, content);
 
         card.setOnMouseEntered(e -> {
-            imgView.setEffect(new javafx.scene.effect.GaussianBlur(2));
-            overlay.setFill(javafx.scene.paint.Color.rgb(139, 90, 43, 0.45));
+            overlay.setStyle("-fx-background-color: rgba(139, 90, 43, 0.45);");
             card.setStyle(
                     "-fx-background-radius: 18;" +
                             "-fx-cursor: hand;" +
-                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 16, 0, 0, 5);" +
-                            "-fx-scale-x: 1.03;" +
-                            "-fx-scale-y: 1.03;"
+                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 16, 0, 0, 5);"
             );
+            ScaleTransition st = new ScaleTransition(Duration.millis(150), card);
+            st.setToX(1.02);
+            st.setToY(1.02);
+            st.play();
         });
+
         card.setOnMouseExited(e -> {
-            imgView.setEffect(new javafx.scene.effect.GaussianBlur(4));
-            overlay.setFill(javafx.scene.paint.Color.rgb(0, 0, 0, 0.30));
+            overlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.35);");
             card.setStyle(
                     "-fx-background-radius: 18;" +
                             "-fx-cursor: hand;" +
                             "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.13), 10, 0, 0, 3);"
             );
+            ScaleTransition st = new ScaleTransition(Duration.millis(150), card);
+            st.setToX(1.0);
+            st.setToY(1.0);
+            st.play();
         });
 
         card.setOnMouseClicked(e -> {
@@ -1326,7 +1326,7 @@ public class SearchPage {
     }
 
     private VBox createProductCard(Product product) {
-        VBox card = new VBox(10);
+        VBox card = new VBox(12);
         card.setStyle("-fx-background-color: white;" +
                 "-fx-background-radius: 15;" +
                 "-fx-padding: 18;");
@@ -1334,15 +1334,28 @@ public class SearchPage {
         card.setAlignment(Pos.CENTER);
         card.setMaxWidth(280);
 
-        // Image Container seperti di HomePage
+        // Image Container - diperbaiki agar gambar tidak terpotong
         StackPane imageContainer = new StackPane();
-        imageContainer.setPrefSize(180, 180);
+        imageContainer.setPrefSize(240, 240);
+        imageContainer.setMinSize(240, 240);
+        imageContainer.setMaxSize(240, 240);
         imageContainer.setStyle("-fx-background-color: #F5F0EA; -fx-background-radius: 12;");
 
-        Rectangle clip = new Rectangle(180, 180);
+        // Clip untuk sudut melengkung
+        Rectangle clip = new Rectangle(240, 240);
         clip.setArcWidth(16);
         clip.setArcHeight(16);
         imageContainer.setClip(clip);
+
+        // ImageView dengan preserveRatio=true agar gambar tidak terpotong
+        ImageView imageView = new ImageView();
+        imageView.setPreserveRatio(true);
+        imageView.setSmooth(true);
+        imageView.setFitWidth(220);
+        imageView.setFitHeight(220);
+
+        // Posisikan imageView di tengah StackPane
+        StackPane.setAlignment(imageView, Pos.CENTER);
 
         try {
             String rawPath = product.getImageUrl();
@@ -1350,27 +1363,24 @@ public class SearchPage {
             InputStream imgStream = getClass().getResourceAsStream(imagePath);
             if (imgStream != null) {
                 Image img = new Image(imgStream);
-                ImageView imageView = new ImageView(img);
-                imageView.setFitWidth(180);
-                imageView.setFitHeight(180);
-                imageView.setPreserveRatio(true);
-                imageView.setSmooth(true);
+                imageView.setImage(img);
                 imageContainer.getChildren().add(imageView);
             } else {
-                Label fb = new Label("🛍️");
-                fb.setStyle("-fx-font-size: 60px;");
-                imageContainer.getChildren().add(fb);
+                Label fallback = new Label("🛍️");
+                fallback.setStyle("-fx-font-size: 80px;");
+                imageContainer.getChildren().add(fallback);
             }
         } catch (Exception ex) {
-            Label fb = new Label("🛍️");
-            fb.setStyle("-fx-font-size: 60px;");
-            imageContainer.getChildren().add(fb);
+            Label fallback = new Label("🛍️");
+            fallback.setStyle("-fx-font-size: 80px;");
+            imageContainer.getChildren().add(fallback);
         }
 
         Label nameLabel = new Label(product.getName());
         nameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + Styles.TEXT_DARK + ";");
         nameLabel.setWrapText(true);
         nameLabel.setAlignment(Pos.CENTER);
+        nameLabel.setMaxWidth(240);
 
         Label categoryLabel = new Label(product.getCategory());
         categoryLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: " + Styles.TEXT_LIGHT + ";" +
@@ -1407,6 +1417,9 @@ public class SearchPage {
 
         card.getChildren().addAll(imageContainer, nameLabel, categoryLabel, priceBox, buttonBox);
 
+        // Tambahkan spacing yang konsisten
+        card.setSpacing(12);
+
         return card;
     }
 
@@ -1441,7 +1454,7 @@ public class SearchPage {
         btn.setOnAction(e -> {
             if (AuthService.isLoggedIn()) {
                 CartService.addToCart(product, 1);
-                CustomToast.showSuccessCartToast(btn.getScene().getWindow(), product.getName());
+                CustomDialog.showSuccess("Success", product.getName() + " added to cart!");
             } else {
                 showLoginAlert();
             }
@@ -1548,14 +1561,6 @@ public class SearchPage {
 
     private void showLoginAlert() {
         hideSuggestions();
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Login Required");
-        alert.setHeaderText("Please login first");
-        alert.setContentText("You need to login to access this feature.");
-        ButtonType loginBtn = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
-        alert.getButtonTypes().setAll(loginBtn, new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
-        alert.showAndWait().ifPresent(response -> {
-            if (response == loginBtn) SceneManager.setScene(new LoginPage().getScene());
-        });
+        LoginRequiredDialog.show("You need to login to access this feature.");
     }
 }

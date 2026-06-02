@@ -59,6 +59,10 @@ public class CartPage {
             return new LoginPage().getScene();
         }
 
+        // 🔄 REFRESH CART SEBELUM TAMPIL
+        CartService.refreshCart();
+        System.out.println("🔄 CartPage loaded, item count: " + CartService.getCartItemCount());
+
         double screenWidth  = Screen.getPrimary().getBounds().getWidth();
         double screenHeight = Screen.getPrimary().getBounds().getHeight();
 
@@ -231,7 +235,7 @@ public class CartPage {
         customPopupToast.setVisible(false);
         customPopupToast.setManaged(false);
 
-        Label iconLabel = new Label("");
+        Label iconLabel = new Label("✓");
         iconLabel.setStyle("-fx-font-size: 22px; -fx-text-fill: #D4A853; -fx-font-weight: bold;");
 
         popupMessageLabel = new Label();
@@ -509,6 +513,11 @@ public class CartPage {
 
     private void refreshCart() {
         cartItemsContainer.getChildren().clear();
+
+        Map<Long, Boolean> checkboxStates = new HashMap<>();
+        for (Map.Entry<Product, CheckBox> entry : itemCheckboxes.entrySet()) {
+            checkboxStates.put(entry.getKey().getId(), entry.getValue().isSelected());
+        }
         itemCheckboxes.clear();
 
         boolean isEmpty = CartService.getCartItemCount() == 0;
@@ -520,11 +529,11 @@ public class CartPage {
 
         if (isEmpty) {
             cartItemsContainer.getChildren().add(buildEmptyCart());
-            if (selectAllCheck  != null) selectAllCheck.setSelected(false);
+            if (selectAllCheck != null) selectAllCheck.setSelected(false);
             if (bottomSelectAll != null) bottomSelectAll.setSelected(false);
         } else {
             for (CartItem item : CartService.getCartItems()) {
-                cartItemsContainer.getChildren().add(createCartRow(item));
+                cartItemsContainer.getChildren().add(createCartRow(item, checkboxStates));
             }
         }
         calculateSelectedTotal();
@@ -574,7 +583,7 @@ public class CartPage {
         return emptyBox;
     }
 
-    private HBox createCartRow(CartItem item) {
+    private HBox createCartRow(CartItem item, Map<Long, Boolean> previousStates) {
         Product product = item.getProduct();
 
         HBox row = new HBox();
@@ -598,6 +607,7 @@ public class CartPage {
 
         CheckBox checkBox = new CheckBox();
         checkBox.setStyle("-fx-cursor: hand;");
+        checkBox.setSelected(previousStates.getOrDefault(product.getId(), false)); // ← tambah ini
         checkBox.setOnAction(e -> {
             calculateSelectedTotal();
             syncSelectAllState();
@@ -608,7 +618,7 @@ public class CartPage {
         productSection.setAlignment(Pos.CENTER_LEFT);
         productSection.setPrefWidth(380);
 
-        // GAMBAR PRODUK (bukan emoji)
+        // GAMBAR PRODUK
         StackPane imageContainer = new StackPane();
         imageContainer.setPrefSize(60, 60);
         imageContainer.setMinSize(60, 60);
@@ -799,28 +809,34 @@ public class CartPage {
     private void syncSelectAllState() {
         if (itemCheckboxes.isEmpty()) return;
         boolean allSelected = itemCheckboxes.values().stream().allMatch(CheckBox::isSelected);
-        if (selectAllCheck  != null) selectAllCheck.setSelected(allSelected);
+        if (selectAllCheck != null) selectAllCheck.setSelected(allSelected);
         if (bottomSelectAll != null) bottomSelectAll.setSelected(allSelected);
     }
 
     private void calculateSelectedTotal() {
         double subtotalNormal = 0;
-        double totalFinal     = 0;
-        int    count          = 0;
+        double totalFinal = 0;
+        int count = 0;
+
+        Map<Long, CheckBox> idToCheckbox = new HashMap<>();
+        for (Map.Entry<Product, CheckBox> entry : itemCheckboxes.entrySet()) {
+            idToCheckbox.put(entry.getKey().getId(), entry.getValue());
+        }
 
         for (CartItem item : CartService.getCartItems()) {
-            CheckBox cb = itemCheckboxes.get(item.getProduct());
+            CheckBox cb = idToCheckbox.get(item.getProduct().getId()); // lookup by ID
+
             if (cb != null && cb.isSelected()) {
                 Product product = item.getProduct();
-                count          += item.getQuantity();
-                totalFinal     += item.getSubtotal();
+                count += item.getQuantity();
+                totalFinal += item.getSubtotal();
                 subtotalNormal += (product.getPrice() * item.getQuantity());
             }
         }
 
         double totalDiscountValue = subtotalNormal - totalFinal;
 
-        if (totalLabel         != null) totalLabel.setText("Rp " + Styles.formatPrice(totalFinal));
+        if (totalLabel != null) totalLabel.setText("Rp " + Styles.formatPrice(totalFinal));
         if (checkoutCountLabel != null) checkoutCountLabel.setText("(" + count + " items)");
 
         if (sidebarItemsLabel != null) {
@@ -872,13 +888,18 @@ public class CartPage {
 
     private List<CartItem> getSelectedCartItems() {
         List<CartItem> selected = new ArrayList<>();
+
+        Map<Long, CheckBox> idToCheckbox = new HashMap<>();
+        for (Map.Entry<Product, CheckBox> entry : itemCheckboxes.entrySet()) {
+            idToCheckbox.put(entry.getKey().getId(), entry.getValue());
+        }
+
         for (CartItem item : CartService.getCartItems()) {
-            CheckBox cb = itemCheckboxes.get(item.getProduct());
+            CheckBox cb = idToCheckbox.get(item.getProduct().getId());
             if (cb != null && cb.isSelected()) selected.add(item);
         }
         return selected;
     }
-
     private HBox createNavBar() {
         HBox navBar = new HBox(30);
         navBar.setAlignment(Pos.CENTER_LEFT);

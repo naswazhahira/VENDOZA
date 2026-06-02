@@ -10,15 +10,18 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 public class AuthService {
     private static final String BASE_URL = "http://localhost:9191/api";
     private static final HttpClient client = HttpClient.newHttpClient();
     private static final Gson gson = new Gson();
+    private static Preferences prefs = Preferences.userNodeForPackage(AuthService.class);
 
     private static User currentUser = null;
     private static List<User> usersCache = new ArrayList<>();
 
+    // ========== REGISTER ==========
     public static boolean register(String username, String password, String email) {
         try {
             JsonObject body = new JsonObject();
@@ -37,7 +40,7 @@ public class AuthService {
             System.out.println("Register Response Status: " + response.statusCode());
             System.out.println("Register Response Body: " + response.body());
 
-            if (response.statusCode() == 200) {
+            if (response.statusCode() == 200 || response.statusCode() == 201) {
                 return true;
             }
             return false;
@@ -47,6 +50,7 @@ public class AuthService {
         }
     }
 
+    // ========== LOGIN ==========
     public static boolean login(String usernameOrEmail, String password) {
         try {
             // Coba cari user berdasarkan username atau email
@@ -90,6 +94,25 @@ public class AuthService {
                 currentUser = new User(name, password, userEmail, role);
                 currentUser.setId(userId);
 
+                // ⭐ LOAD DATA DARI PREFERENCES (FOTO, PHONE, ADDRESS)
+                String savedPhotoPath = getUserProfilePhoto(userEmail);
+                if (savedPhotoPath != null && !savedPhotoPath.isEmpty()) {
+                    currentUser.setProfilePhotoPath(savedPhotoPath);
+                    System.out.println("Loaded profile photo from preferences: " + savedPhotoPath);
+                }
+
+                String savedPhone = getUserPhone(userEmail);
+                if (savedPhone != null && !savedPhone.isEmpty()) {
+                    currentUser.setPhoneNumber(savedPhone);
+                    System.out.println("Loaded phone from preferences: " + savedPhone);
+                }
+
+                String savedAddress = getUserAddress(userEmail);
+                if (savedAddress != null && !savedAddress.isEmpty()) {
+                    currentUser.setAddress(savedAddress);
+                    System.out.println("Loaded address from preferences: " + savedAddress);
+                }
+
                 syncUsersFromBackend();
                 return true;
             }
@@ -100,28 +123,52 @@ public class AuthService {
         }
     }
 
+    // ========== LOGOUT ==========
     public static void logout() {
         currentUser = null;
     }
 
+    // ========== GET CURRENT USER ==========
     public static User getCurrentUser() {
         return currentUser;
     }
 
+    // ========== CHECK LOGIN STATUS ==========
     public static boolean isLoggedIn() {
         return currentUser != null;
     }
 
+    // ========== CHECK ADMIN ==========
     public static boolean isAdmin() {
         return currentUser != null && currentUser.isAdmin();
     }
 
-    public static boolean updateProfile(String username, String phone, String address) {
+    // ========== UPDATE FULL PROFILE (nama, phone, address, photo) ==========
+    public static boolean updateFullProfile(String username, String phone, String address, String photoPath) {
         if (currentUser == null) return false;
         try {
             currentUser.setUsername(username);
-            currentUser.setPhoneNumber(phone);
-            currentUser.setAddress(address);
+
+            if (phone != null) {
+                currentUser.setPhoneNumber(phone.isEmpty() ? null : phone);
+                saveUserPhone(currentUser.getEmail(), phone);
+            }
+
+            if (address != null) {
+                currentUser.setAddress(address.isEmpty() ? null : address);
+                saveUserAddress(currentUser.getEmail(), address);
+            }
+
+            if (photoPath != null) {
+                if (photoPath.isEmpty()) {
+                    currentUser.setProfilePhotoPath(null);
+                    deleteUserProfilePhoto(currentUser.getEmail());
+                } else {
+                    currentUser.setProfilePhotoPath(photoPath);
+                    updateUserProfilePhoto(currentUser.getEmail(), photoPath);
+                }
+            }
+
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -129,11 +176,98 @@ public class AuthService {
         }
     }
 
+    // ========== UPDATE PROFILE (tanpa foto) ==========
+    public static boolean updateProfile(String username, String phone, String address) {
+        if (currentUser == null) return false;
+        try {
+            currentUser.setUsername(username);
+
+            if (phone != null) {
+                currentUser.setPhoneNumber(phone.isEmpty() ? null : phone);
+                saveUserPhone(currentUser.getEmail(), phone);
+            }
+
+            if (address != null) {
+                currentUser.setAddress(address.isEmpty() ? null : address);
+                saveUserAddress(currentUser.getEmail(), address);
+            }
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // ========== UPDATE PROFILE PHOTO ==========
+    public static void updateUserProfilePhoto(String email, String photoPath) {
+        prefs.put("photo_" + email, photoPath);
+        System.out.println("Profile photo saved to preferences for: " + email + " -> " + photoPath);
+
+        if (currentUser != null && currentUser.getEmail().equals(email)) {
+            currentUser.setProfilePhotoPath(photoPath);
+        }
+    }
+
+    // ========== GET USER PROFILE PHOTO ==========
+    public static String getUserProfilePhoto(String email) {
+        return prefs.get("photo_" + email, null);
+    }
+
+    // ========== DELETE USER PROFILE PHOTO ==========
+    public static void deleteUserProfilePhoto(String email) {
+        prefs.remove("photo_" + email);
+        if (currentUser != null && currentUser.getEmail().equals(email)) {
+            currentUser.setProfilePhotoPath(null);
+        }
+        System.out.println("Profile photo deleted from preferences for: " + email);
+    }
+
+    // ========== SAVE USER PHONE NUMBER ==========
+    public static void saveUserPhone(String email, String phone) {
+        if (phone == null || phone.isEmpty()) {
+            prefs.remove("phone_" + email);
+        } else {
+            prefs.put("phone_" + email, phone);
+        }
+        System.out.println("Phone saved to preferences for: " + email + " -> " + phone);
+    }
+
+    // ========== GET USER PHONE NUMBER ==========
+    public static String getUserPhone(String email) {
+        return prefs.get("phone_" + email, null);
+    }
+
+    // ========== SAVE USER ADDRESS ==========
+    public static void saveUserAddress(String email, String address) {
+        if (address == null || address.isEmpty()) {
+            prefs.remove("address_" + email);
+        } else {
+            prefs.put("address_" + email, address);
+        }
+        System.out.println("Address saved to preferences for: " + email + " -> " + address);
+    }
+
+    // ========== GET USER ADDRESS ==========
+    public static String getUserAddress(String email) {
+        return prefs.get("address_" + email, null);
+    }
+
+    // ========== DELETE ALL USER DATA FROM PREFERENCES ==========
+    public static void deleteAllUserData(String email) {
+        prefs.remove("photo_" + email);
+        prefs.remove("phone_" + email);
+        prefs.remove("address_" + email);
+        System.out.println("All user data deleted from preferences for: " + email);
+    }
+
+    // ========== GET ALL USERS ==========
     public static List<User> getAllUsers() {
         syncUsersFromBackend();
         return new ArrayList<>(usersCache);
     }
 
+    // ========== SYNC USERS FROM BACKEND ==========
     private static void syncUsersFromBackend() {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -152,6 +286,23 @@ public class AuthService {
                 for (UserFromBackend bu : backendUsers) {
                     User u = new User(bu.name, "", bu.email, bu.role);
                     u.setId(bu.id);
+
+                    // Load data dari preferences untuk setiap user
+                    String photoPath = getUserProfilePhoto(bu.email);
+                    if (photoPath != null) {
+                        u.setProfilePhotoPath(photoPath);
+                    }
+
+                    String phone = getUserPhone(bu.email);
+                    if (phone != null) {
+                        u.setPhoneNumber(phone);
+                    }
+
+                    String address = getUserAddress(bu.email);
+                    if (address != null) {
+                        u.setAddress(address);
+                    }
+
                     usersCache.add(u);
                 }
             }
@@ -160,12 +311,16 @@ public class AuthService {
         }
     }
 
+    // ========== DELETE USER ==========
     public static boolean deleteUser(String username) {
         if ("admin".equals(username)) return false;
 
         try {
             for (User u : usersCache) {
                 if (u.getUsername().equals(username)) {
+                    // Hapus semua data user dari preferences
+                    deleteAllUserData(u.getEmail());
+
                     HttpRequest request = HttpRequest.newBuilder()
                             .uri(URI.create(BASE_URL + "/auth/users/" + u.getId()))
                             .DELETE()
@@ -181,6 +336,7 @@ public class AuthService {
         return false;
     }
 
+    // ========== HELPER CLASS ==========
     private static class UserFromBackend {
         Long id;
         String name;

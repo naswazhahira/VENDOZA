@@ -12,6 +12,16 @@ import javafx.scene.control.*;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.layout.*;
 import javafx.stage.Screen;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.shape.Rectangle;
+import java.io.InputStream;
+import com.google.gson.JsonArray;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import com.google.gson.JsonObject;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -855,8 +865,45 @@ public class CheckoutPage {
             row.setPadding(new Insets(12, 16, 12, 16));
             row.setStyle("-fx-background-color: #FAF6F1; -fx-background-radius: 10;");
 
-            Label img = new Label(item.getProduct().getImageUrl());
-            img.setStyle("-fx-font-size: 28px;");
+            StackPane imageContainer = new StackPane();
+            imageContainer.setPrefSize(60, 60);
+            imageContainer.setMinSize(60, 60);
+            imageContainer.setStyle("-fx-background-color: #F5F0EA; -fx-background-radius: 12;");
+
+            Rectangle clip = new Rectangle(60, 60);
+            clip.setArcWidth(16);
+            clip.setArcHeight(16);
+            imageContainer.setClip(clip);
+
+            try {
+                String rawPath = item.getProduct().getImageUrl();
+                String imagePath;
+                if (rawPath == null || rawPath.trim().isEmpty()) throw new IllegalArgumentException();
+                if (rawPath.startsWith("/")) imagePath = rawPath;
+                else if (rawPath.startsWith("images/")) imagePath = "/" + rawPath;
+                else imagePath = "/images/" + rawPath;
+
+                InputStream imgStream = getClass().getResourceAsStream(imagePath);
+                if (imgStream == null) imgStream = getClass().getResourceAsStream("/" + rawPath.substring(rawPath.lastIndexOf("/") + 1));
+
+                if (imgStream != null) {
+                    Image img = new Image(imgStream);
+                    ImageView imageView = new ImageView(img);
+                    imageView.setFitWidth(60);
+                    imageView.setFitHeight(60);
+                    imageView.setPreserveRatio(true);
+                    imageView.setSmooth(true);
+                    imageContainer.getChildren().add(imageView);
+                } else {
+                    Label fb = new Label("🛍️");
+                    fb.setStyle("-fx-font-size: 30px;");
+                    imageContainer.getChildren().add(fb);
+                }
+            } catch (Exception ex) {
+                Label fb = new Label("🛍️");
+                fb.setStyle("-fx-font-size: 30px;");
+                imageContainer.getChildren().add(fb);
+            }
 
             VBox info = new VBox(4);
             HBox.setHgrow(info, Priority.ALWAYS);
@@ -869,7 +916,7 @@ public class CheckoutPage {
             Label subT = new Label("Rp " + Styles.formatPrice(item.getSubtotal()));
             subT.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2C1810;");
 
-            row.getChildren().addAll(img, info, subT);
+            row.getChildren().addAll(imageContainer, info, subT);
             itemsContainer.getChildren().add(row);
         }
 
@@ -965,18 +1012,46 @@ public class CheckoutPage {
         double shipping = getShippingCost();
         String orderId  = "ORD-" + System.currentTimeMillis();
 
-        if (user != null && selectedAddress != null) {
-            Order newOrder = new Order(orderId, user, checkoutItems, shipping, selectedAddress.toDisplayString());
-            user.getOrders().add(newOrder);
-        }
-        for (CartItem item : checkoutItems) CartService.removeFromCart(item.getProduct());
+            // Kirim ke backend
+            try {
+                JsonObject body = new JsonObject();
+                body.addProperty("orderId", orderId);
+                body.addProperty("userId", user.getId());
+                body.addProperty("subtotal", currentSubtotal);
+                body.addProperty("shippingCost", shipping);
+                body.addProperty("totalAmount", currentSubtotal + shipping);
+                body.addProperty("shippingAddress", selectedAddress.toDisplayString());
+                body.addProperty("paymentMethod", getSelectedPaymentName());
+                body.addProperty("shippingMethod", getSelectedShippingName());
 
-        SceneManager.setScene(buildThankYouScene(
-                orderId,
-                currentSubtotal + shipping,
-                getSelectedShippingName(),
-                getSelectedPaymentName()
-        ));
+                JsonArray items = new JsonArray();
+                for (CartItem item : checkoutItems) {
+                    JsonObject i = new JsonObject();
+                    i.addProperty("productId", item.getProduct().getId());
+                    i.addProperty("productName", item.getProduct().getName());
+                    i.addProperty("quantity", item.getQuantity());
+                    i.addProperty("price", item.getSubtotal());
+                    items.add(i);
+                }
+                body.add("items", items);
+
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("http://localhost:9191/api/orders"))
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
+                        .build();
+
+                HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+                System.out.println("✅ Order saved to backend");
+            } catch (Exception e) {
+                System.err.println("❌ Failed to save order: " + e.getMessage());
+            }
+
+            for (CartItem item : checkoutItems) CartService.removeFromCart(item.getProduct());
+            SceneManager.setScene(buildThankYouScene(
+                    orderId, currentSubtotal + shipping,
+                    getSelectedShippingName(), getSelectedPaymentName()
+            ));
     }
 
     //  SCENE: ORDER COMPLETE

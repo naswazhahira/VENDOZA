@@ -5,6 +5,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
@@ -39,6 +40,13 @@ public class LoginPage {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }
 
+        // TEKAN ENTER UNTUK LOGIN
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                handleLogin();
+            }
+        });
+
         return scene;
     }
 
@@ -72,14 +80,14 @@ public class LoginPage {
                 "-fx-font-size: 24px; -fx-font-weight: bold;" +
                         "-fx-text-fill: #3E2723; -fx-font-family: 'Georgia';"
         );
-        
+
         HBox logoGroup = new HBox(4);
         logoGroup.setAlignment(Pos.CENTER_LEFT);
         logoGroup.getChildren().addAll(backBtn, logo);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        
+
         navBar.getChildren().addAll(logoGroup, spacer);
         return navBar;
     }
@@ -115,11 +123,11 @@ public class LoginPage {
 
         // Username Field
         VBox usernameBox = new VBox(5);
-        Label usernameLabel = new Label("Username");
+        Label usernameLabel = new Label("Username / Email");
         usernameLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: " + Styles.TEXT_DARK + ";");
 
         usernameField = new TextField();
-        usernameField.setPromptText("Enter your username");
+        usernameField.setPromptText("Enter your username or email");
         usernameField.setStyle(Styles.textFieldStyle());
         usernameBox.getChildren().addAll(usernameLabel, usernameField);
 
@@ -178,15 +186,21 @@ public class LoginPage {
     }
 
     private void handleLogin() {
-        String username = usernameField.getText();
+        String usernameOrEmail = usernameField.getText();
         String password = passwordField.getText();
 
-        if (username.isEmpty() || password.isEmpty()) {
+        if (usernameOrEmail.isEmpty() || password.isEmpty()) {
             messageLabel.setText("❌ Please fill all fields!");
             return;
         }
 
-        if (AuthService.login(username, password)) {
+        System.out.println("Attempting login with: " + usernameOrEmail);
+
+        boolean success = AuthService.login(usernameOrEmail, password);
+
+        System.out.println("Login success: " + success);
+
+        if (success) {
             messageLabel.setStyle("-fx-text-fill: " + Styles.SUCCESS_GREEN + ";");
 
             // Cek apakah user adalah admin

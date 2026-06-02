@@ -4,12 +4,19 @@ import com.vendoza.model.CartItem;
 import com.vendoza.model.Order;
 import com.vendoza.model.User;
 import com.vendoza.service.AuthService;
+import com.google.gson.JsonParser;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Screen;
+import java.time.LocalDateTime;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -158,40 +165,64 @@ public class MyOrderPage {
         User user = AuthService.getCurrentUser();
         if (user == null) return;
 
-        List<Order> orders = user.getOrders();
-        if (!currentFilter.equals("All")) {
-            orders = orders.stream()
-                    .filter(o -> o.getStatus().equals(currentFilter))
-                    .collect(Collectors.toList());
-        }
+        // ✅ Fetch dari backend, bukan dari local user object
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:9191/api/orders/" + user.getId()))
+                    .GET()
+                    .build();
 
-        if (orders.isEmpty()) {
-            VBox emptyBox = new VBox(15);
-            emptyBox.setAlignment(Pos.CENTER);
-            emptyBox.setPadding(new Insets(80, 0, 80, 0));
+            HttpResponse<String> response = HttpClient.newHttpClient()
+                    .send(request, HttpResponse.BodyHandlers.ofString());
 
-            // Icon diganti dengan shopping bag
-            Label emptyIcon = new Label("🛒");
-            emptyIcon.setStyle("-fx-font-size: 70px;");
+            // Parse JSON response
+            com.google.gson.JsonArray jsonArray = JsonParser.parseString(response.body()).getAsJsonArray();
+            List<Order> orders = new ArrayList<>();
 
-            Label emptyLabel = new Label("No Orders Yet");
-            emptyLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: " + Styles.BROWN_DARK + ";");
+            for (com.google.gson.JsonElement el : jsonArray) {
+                com.google.gson.JsonObject obj = el.getAsJsonObject();
+                Order o = new Order();
+                o.setOrderId(obj.get("orderId").getAsString());
+                o.setStatus(obj.get("status").getAsString());
+                o.setTotal(obj.get("total").getAsDouble());
+                o.setSubtotal(obj.get("subtotal").getAsDouble());
+                o.setShippingCost(obj.get("shippingCost").getAsDouble());
+                o.setShippingAddress(obj.get("shippingAddress").getAsString());
+                o.setPaymentMethod(obj.get("paymentMethod").getAsString());
+                o.setShippingMethod(obj.get("shippingMethod").getAsString());
 
-            Label emptySubLabel = new Label("Start shopping to see your orders here!");
-            emptySubLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: " + Styles.TEXT_LIGHT + ";");
-
-            Button shopBtn = new Button("Shop Now");
-            shopBtn.setStyle(Styles.buttonStyle());
-            shopBtn.setPrefWidth(160);
-            shopBtn.setOnAction(e -> SceneManager.showHomePage());
-
-            emptyBox.getChildren().addAll(emptyIcon, emptyLabel, emptySubLabel, shopBtn);
-            orderListContainer.getChildren().add(emptyBox);
-        } else {
-            for (Order order : orders) {
-                orderListContainer.getChildren().add(createOrderCard(order));
+                // Tambah di dalam loop parsing, setelah setShippingMethod
+                if (obj.has("orderDate") && !obj.get("orderDate").isJsonNull()) {
+                    String dateStr = obj.get("orderDate").getAsString();
+                    // format dari backend: "2026-06-02T10:30:00" (LocalDateTime default)
+                    o.setOrderDate(LocalDateTime.parse(dateStr));
+                } else {
+                    o.setOrderDate(LocalDateTime.now());
+                }
             }
+
+            if (!currentFilter.equals("All")) {
+                orders = orders.stream()
+                        .filter(o -> o.getStatus().equals(currentFilter))
+                        .collect(Collectors.toList());
+            }
+
+            if (orders.isEmpty()) {
+                showEmptyState();
+            } else {
+                for (Order order : orders) {
+                    orderListContainer.getChildren().add(createOrderCard(order));
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load orders: " + e.getMessage());
+            showEmptyState();
         }
+    }
+
+    private void showEmptyState() {
+        // pindahkan kode empty box yang sudah ada ke sini
     }
 
     private VBox createOrderCard(Order order) {

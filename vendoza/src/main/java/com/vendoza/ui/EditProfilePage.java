@@ -18,6 +18,7 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.stage.Screen;
 import javafx.util.Duration;
 
 import java.io.File;
@@ -36,6 +37,9 @@ public class EditProfilePage {
     private Label defaultPhotoIcon;
 
     public Scene getScene() {
+        double screenWidth = Screen.getPrimary().getBounds().getWidth();
+        double screenHeight = Screen.getPrimary().getBounds().getHeight();
+
         User currentUser = AuthService.getCurrentUser();
 
         if (currentUser.getProfilePhotoPath() != null) {
@@ -46,11 +50,11 @@ public class EditProfilePage {
 
         VBox mainContent = new VBox(20);
         mainContent.setAlignment(Pos.TOP_CENTER);
-        mainContent.setPadding(new Insets(30, 40, 80, 40));
+        mainContent.setPadding(new Insets(30, 40, 50, 40));
         mainContent.setStyle("-fx-background-color: #E8DCD0;");
 
         Text title = new Text("Edit Profile");
-        title.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-fill: " + Styles.BROWN_DARK + ";");
+        title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-fill: " + Styles.BROWN_DARK + ";");
 
         VBox photoSection = createPhotoSection(currentUser);
 
@@ -139,16 +143,12 @@ public class EditProfilePage {
 
         mainContent.getChildren().addAll(title, photoSection, formBox);
 
-        ScrollPane scrollPane = new ScrollPane(mainContent);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: #E8DCD0; -fx-background: #E8DCD0;");
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setBorder(Border.EMPTY);
-
-        VBox root = new VBox(navBar, scrollPane);
+        // Gunakan VBox langsung tanpa ScrollPane agar full tampil
+        VBox root = new VBox(navBar, mainContent);
         root.setStyle("-fx-background-color: #E8DCD0;");
+        VBox.setVgrow(mainContent, Priority.ALWAYS);
 
-        Scene scene = new Scene(root, 1200, 700);
+        Scene scene = new Scene(root, screenWidth, screenHeight);
         try {
             scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
         } catch (Exception ignored) {}
@@ -161,15 +161,15 @@ public class EditProfilePage {
 
         StackPane photoStack = new StackPane();
         photoStack.setAlignment(Pos.CENTER);
-        photoStack.setPrefSize(110, 110);
-        photoStack.setMaxSize(110, 110);
+        photoStack.setPrefSize(120, 120);
+        photoStack.setMaxSize(120, 120);
 
-        defaultCircleBg = new Circle(55);
+        defaultCircleBg = new Circle(60);
         defaultCircleBg.setFill(Color.web(Styles.BROWN_DARK));
         defaultCircleBg.setEffect(new DropShadow(8, Color.rgb(0, 0, 0, 0.2)));
 
         defaultPhotoIcon = new Label("👤");
-        defaultPhotoIcon.setStyle("-fx-font-size: 55px;");
+        defaultPhotoIcon.setStyle("-fx-font-size: 60px;");
 
         photoImageView = new ImageView();
         photoImageView.setVisible(false);
@@ -198,7 +198,7 @@ public class EditProfilePage {
         galleryBtn.setOnMouseExited(e -> galleryBtn.setStyle(Styles.outlineButtonStyle() + " -fx-font-size: 12px; -fx-padding: 8 15;"));
         galleryBtn.setOnAction(e -> openGallery());
 
-        // Tombol Take Photo (BARU)
+        // Tombol Take Photo
         Button cameraBtn = new Button("Take Photo");
         cameraBtn.setStyle(Styles.outlineButtonStyle() + " -fx-font-size: 12px; -fx-padding: 8 15;");
         cameraBtn.setOnMouseEntered(e -> cameraBtn.setStyle(Styles.buttonStyle() + " -fx-font-size: 12px; -fx-padding: 8 15;"));
@@ -236,7 +236,6 @@ public class EditProfilePage {
         return section;
     }
 
-    // Buka kamera
     private void openCamera() {
         new CameraCapturePage().show(path -> {
             selectedPhotoPath = path;
@@ -276,7 +275,7 @@ public class EditProfilePage {
     private WritableImage cropToSquare(Image img) {
         int imgW = (int) img.getWidth();
         int imgH = (int) img.getHeight();
-        int size  = Math.min(imgW, imgH);
+        int size = Math.min(imgW, imgH);
         int offsetX = (imgW - size) / 2;
         int offsetY = (imgH - size) / 2;
         PixelReader reader = img.getPixelReader();
@@ -380,7 +379,13 @@ public class EditProfilePage {
 
         homeBtn.setOnAction(e -> SceneManager.showHomePage());
         searchBtn.setOnAction(e -> SceneManager.setScene(new SearchPage().getScene()));
-        cartBtn.setOnAction(e -> { if (AuthService.isLoggedIn()) SceneManager.setScene(new CartPage().getScene()); });
+        cartBtn.setOnAction(e -> {
+            if (AuthService.isLoggedIn()) {
+                SceneManager.setScene(new CartPage().getScene());
+            } else {
+                LoginRequiredDialog.show("You need to login to access your cart.");
+            }
+        });
         profileBtn.setOnAction(e -> SceneManager.setScene(new ProfilePage().getScene()));
 
         navBar.getChildren().addAll(backBtn, logo, spacer, homeBtn, searchBtn, cartBtn, profileBtn);

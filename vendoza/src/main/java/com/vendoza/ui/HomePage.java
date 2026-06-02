@@ -4,6 +4,7 @@ import com.vendoza.model.Product;
 import com.vendoza.service.AuthService;
 import com.vendoza.service.CartService;
 import com.vendoza.service.DataService;
+import com.vendoza.service.ProductUpdateNotifier;
 import javafx.animation.ScaleTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -25,6 +26,17 @@ public class HomePage {
 
     private VBox contentArea;
     private ScrollPane scrollPane;
+    private ProductUpdateNotifier.ProductUpdateListener productUpdateListener;
+
+    public HomePage() {
+        // Setup listener untuk update rating
+        productUpdateListener = updatedProduct -> {
+            javafx.application.Platform.runLater(() -> {
+                System.out.println("Product updated: " + updatedProduct.getName());
+            });
+        };
+        ProductUpdateNotifier.getInstance().addListener(productUpdateListener);
+    }
 
     public Scene getScene() {
         double screenWidth = Screen.getPrimary().getBounds().getWidth();
@@ -447,14 +459,15 @@ public class HomePage {
                         "-fx-background-radius: 20;" +
                         "-fx-padding: 3 10;"
         );
-        
-        double rating = product.getRating();
-        int roundedRating = (int) Math.round(rating);
+
+        double averageRating = product.getAverageRating();
+
+        int roundedRating = (int) Math.round(averageRating);
         int fullStars = Math.min(roundedRating, 5);
         int emptyStars = 5 - fullStars;
         String stars = "★".repeat(fullStars) + "☆".repeat(emptyStars);
 
-        Label ratingLabel = new Label(stars + "  " + String.format("%.1f", rating));
+        Label ratingLabel = new Label(stars + "  " + String.format("%.1f", averageRating));
         ratingLabel.setStyle(
                 "-fx-font-size: 12px;" +
                         "-fx-text-fill: #D4A853;"

@@ -165,7 +165,6 @@ public class MyOrderPage {
         User user = AuthService.getCurrentUser();
         if (user == null) return;
 
-        // ✅ Fetch dari backend, bukan dari local user object
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("http://localhost:9191/api/orders/" + user.getId()))
@@ -175,7 +174,6 @@ public class MyOrderPage {
             HttpResponse<String> response = HttpClient.newHttpClient()
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
-            // Parse JSON response
             com.google.gson.JsonArray jsonArray = JsonParser.parseString(response.body()).getAsJsonArray();
             List<Order> orders = new ArrayList<>();
 
@@ -191,19 +189,21 @@ public class MyOrderPage {
                 o.setPaymentMethod(obj.get("paymentMethod").getAsString());
                 o.setShippingMethod(obj.get("shippingMethod").getAsString());
 
-                // Tambah di dalam loop parsing, setelah setShippingMethod
                 if (obj.has("orderDate") && !obj.get("orderDate").isJsonNull()) {
                     String dateStr = obj.get("orderDate").getAsString();
-                    // format dari backend: "2026-06-02T10:30:00" (LocalDateTime default)
                     o.setOrderDate(LocalDateTime.parse(dateStr));
                 } else {
                     o.setOrderDate(LocalDateTime.now());
                 }
+                
+                o.setItems(new ArrayList<>());
+
+                orders.add(o);
             }
 
             if (!currentFilter.equals("All")) {
                 orders = orders.stream()
-                        .filter(o -> o.getStatus().equals(currentFilter))
+                        .filter(o -> o.getStatus().equalsIgnoreCase(currentFilter))
                         .collect(Collectors.toList());
             }
 

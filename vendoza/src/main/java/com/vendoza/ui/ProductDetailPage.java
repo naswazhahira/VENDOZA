@@ -1,8 +1,10 @@
 package com.vendoza.ui;
 
 import com.vendoza.model.Product;
+import com.vendoza.model.Review;
 import com.vendoza.service.AuthService;
 import com.vendoza.service.CartService;
+import com.vendoza.service.DataService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -17,11 +19,14 @@ import javafx.stage.Screen;
 public class ProductDetailPage {
 
     private final Product product;
-    private int totalReviewCount = 2;
     private Label mainCardReviewCount;
+    private Label mainCardStars;
+    private Label mainCardRatingNum;
 
     public ProductDetailPage(Product product) {
         this.product = product;
+        // Load sample reviews ke dalam product
+        product.loadSampleReviewsIfNeeded();
     }
 
     public Scene getScene() {
@@ -175,15 +180,17 @@ public class ProductDetailPage {
 
         HBox ratingRow = new HBox(10);
         ratingRow.setAlignment(Pos.CENTER_LEFT);
-        Label stars = new Label(product.getStarString());
-        stars.setStyle("-fx-font-size: 18px; -fx-text-fill: #D4A853;");
-        Label ratingNum = new Label(String.format("%.1f", product.getRating()));
-        ratingNum.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #3E2723;");
+        mainCardStars = new Label(product.getStarString());
+        mainCardStars.setStyle("-fx-font-size: 18px; -fx-text-fill: #D4A853;");
 
-        mainCardReviewCount = new Label("(" + totalReviewCount + " reviews)");
+        mainCardRatingNum = new Label(String.format("%.1f", product.getAverageRating()));
+        mainCardRatingNum.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #3E2723;");
+
+        int totalReviews = product.getTotalReviewCount();
+        mainCardReviewCount = new Label("(" + totalReviews + " reviews)");
         mainCardReviewCount.setStyle("-fx-font-size: 13px; -fx-text-fill: #8D6E63;");
 
-        ratingRow.getChildren().addAll(stars, ratingNum, mainCardReviewCount);
+        ratingRow.getChildren().addAll(mainCardStars, mainCardRatingNum, mainCardReviewCount);
 
         Region sep1 = new Region();
         sep1.setPrefHeight(1);
@@ -329,40 +336,40 @@ public class ProductDetailPage {
     private VBox createDetailSection() {
         VBox section = new VBox(24);
 
+        // ── Deskripsi ────────────────────────────────────────────
         VBox descCard = new VBox(14);
         descCard.setStyle(
                 "-fx-background-color: white; -fx-background-radius: 20;" +
                         "-fx-padding: 30; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 12, 0, 0, 3);"
         );
-
         Label descTitle = new Label("Product Description");
-        descTitle.setStyle("-fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: #3E2723; -fx-font-family: 'Playfair Display';");
-
+        descTitle.setStyle("-fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: #3E2723; -fx-font-family: 'Georgia';");
         Region descSep = new Region();
         descSep.setPrefHeight(2);
         descSep.setMaxWidth(140);
         descSep.setStyle("-fx-background-color: #D4A853; -fx-background-radius: 2;");
-
         Label descText = new Label(product.getDescription());
         descText.setStyle("-fx-font-size: 14px; -fx-text-fill: #5D4037; -fx-line-spacing: 6;");
         descText.setWrapText(true);
-
         descCard.getChildren().addAll(descTitle, descSep, descText);
 
+        // ── Komentar ──────────────────────────────────────────────
         VBox commentCard = new VBox(20);
         commentCard.setStyle(
                 "-fx-background-color: white; -fx-background-radius: 20;" +
                         "-fx-padding: 30; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 12, 0, 0, 3);"
         );
 
-        Label commentTitle = new Label("Customer Reviews  (" + totalReviewCount + ")");
-        commentTitle.setStyle("-fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: #3E2723; -fx-font-family: 'Playfair Display';");
+        int totalReviews = product.getTotalReviewCount();
+        Label commentTitle = new Label("Customer Reviews  (" + totalReviews + ")");
+        commentTitle.setStyle("-fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: #3E2723; -fx-font-family: 'Georgia';");
 
         Region commentSep = new Region();
         commentSep.setPrefHeight(2);
         commentSep.setMaxWidth(140);
         commentSep.setStyle("-fx-background-color: #D4A853; -fx-background-radius: 2;");
 
+        // ── Rating selector ──────────────────────────────────────
         HBox ratingSelector = new HBox(8);
         ratingSelector.setAlignment(Pos.CENTER_LEFT);
         Label ratingPrompt = new Label("Your Rating:");
@@ -374,10 +381,7 @@ public class ProductDetailPage {
         for (int i = 0; i < 5; i++) {
             final int starIndex = i + 1;
             Button starBtn = new Button("☆");
-            starBtn.setStyle(
-                    "-fx-background-color: transparent; -fx-text-fill: #BDBDBD;" +
-                            "-fx-font-size: 24px; -fx-cursor: hand; -fx-padding: 0 2;"
-            );
+            starBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #BDBDBD; -fx-font-size: 24px; -fx-cursor: hand; -fx-padding: 0 2;");
             starBtn.setOnAction(ev -> {
                 selectedRating[0] = starIndex;
                 for (int j = 0; j < 5; j++) {
@@ -394,9 +398,11 @@ public class ProductDetailPage {
         ratingSelector.getChildren().add(ratingPrompt);
         for (Button sb : starBtns) ratingSelector.getChildren().add(sb);
 
+        // ── Input teks ───────────────────────────────────────────
         TextArea commentInput = new TextArea();
         commentInput.setPromptText("Share your thoughts about this product...");
         commentInput.setPrefRowCount(3);
+        commentInput.getStyleClass().add("comment-input");
         commentInput.setStyle(
                 "-fx-background-color: #F5EFE8; -fx-background-radius: 12;" +
                         "-fx-border-color: #C8A96E; -fx-border-radius: 12; -fx-border-width: 1.5;" +
@@ -405,56 +411,69 @@ public class ProductDetailPage {
         );
 
         Button submitBtn = new Button("Post Review");
-        submitBtn.setStyle(
-                "-fx-background-color: #3E2723; -fx-text-fill: #D4A853;" +
-                        "-fx-font-size: 13px; -fx-font-weight: bold;" +
-                        "-fx-background-radius: 10; -fx-padding: 10 28; -fx-cursor: hand;"
-        );
-        submitBtn.setOnMouseEntered(e -> submitBtn.setStyle(
-                "-fx-background-color: #D4A853; -fx-text-fill: #2C1810;" +
-                        "-fx-font-size: 13px; -fx-font-weight: bold;" +
-                        "-fx-background-radius: 10; -fx-padding: 10 28; -fx-cursor: hand;"
-        ));
-        submitBtn.setOnMouseExited(e -> submitBtn.setStyle(
-                "-fx-background-color: #3E2723; -fx-text-fill: #D4A853;" +
-                        "-fx-font-size: 13px; -fx-font-weight: bold;" +
-                        "-fx-background-radius: 10; -fx-padding: 10 28; -fx-cursor: hand;"
-        ));
+        submitBtn.setStyle("-fx-background-color: #3E2723; -fx-text-fill: #D4A853; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 28; -fx-cursor: hand;");
+        submitBtn.setOnMouseEntered(e -> submitBtn.setStyle("-fx-background-color: #D4A853; -fx-text-fill: #2C1810; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 28; -fx-cursor: hand;"));
+        submitBtn.setOnMouseExited(e -> submitBtn.setStyle("-fx-background-color: #3E2723; -fx-text-fill: #D4A853; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 28; -fx-cursor: hand;"));
 
+        // ── List komentar ─────────────────────────────────────────
         VBox commentsListBox = new VBox(14);
 
-        commentsListBox.getChildren().addAll(
-                buildCommentItem("Sarah M.", "Absolutely love this! Quality is amazing.", "2 days ago", "★★★★★"),
-                buildCommentItem("James K.", "Great product, fast shipping. Highly recommend!", "5 days ago", "★★★★☆")
-        );
+        // Tampilkan SEMUA review dari product (termasuk sample)
+        for (Review r : product.getAllReviews()) {
+            commentsListBox.getChildren().add(
+                    buildCommentItem(r.getAuthor(), r.getText(), r.getTime(), r.getStarString())
+            );
+        }
 
         submitBtn.setOnAction(e -> {
             if (!AuthService.isLoggedIn()) {
                 LoginRequiredDialog.show("Please log in first to post a review.");
                 return;
             }
+
             String text = commentInput.getText().trim();
-            if (!text.isEmpty()) {
-                int r = selectedRating[0] > 0 ? selectedRating[0] : 5;
-                String userStars = "★".repeat(r) + "☆".repeat(5 - r);
+            int stars = selectedRating[0];
 
-                commentsListBox.getChildren().add(0, buildCommentItem("You", text, "Just now", userStars));
-
-                commentInput.clear();
-
-                selectedRating[0] = 0;
-                for (Button sb : starBtns) {
-                    sb.setText("☆");
-                    sb.setStyle("-fx-background-color: transparent; -fx-text-fill: #BDBDBD; -fx-font-size: 24px; -fx-cursor: hand; -fx-padding: 0 2;");
-                }
-
-                totalReviewCount++;
-                commentTitle.setText("Customer Reviews  (" + totalReviewCount + ")");
-
-                updateMainCardReviewCount(totalReviewCount);
-
-                showSuccess("Your review has been posted!");
+            // Validasi
+            if (stars == 0 && text.isEmpty()) {
+                showWarningPopup("Please give a star rating and write a comment before posting.");
+                return;
             }
+            if (stars == 0) {
+                showWarningPopup("Please select a star rating before posting.");
+                return;
+            }
+            if (text.isEmpty()) {
+                showWarningPopup("Please write a comment before posting.");
+                return;
+            }
+
+            // Simpan ke product
+            String author = AuthService.getCurrentUser().getUsername();
+            Review review = new Review(author, text, stars, "Just now");
+            product.addReview(review);
+
+            // Tambah ke UI
+            commentsListBox.getChildren().add(0, buildCommentItem(author, text, "Just now", review.getStarString()));
+
+            // Reset input
+            commentInput.clear();
+            selectedRating[0] = 0;
+            for (Button sb : starBtns) {
+                sb.setText("☆");
+                sb.setStyle("-fx-background-color: transparent; -fx-text-fill: #BDBDBD; -fx-font-size: 24px; -fx-cursor: hand; -fx-padding: 0 2;");
+            }
+
+            // Update jumlah review
+            int newCount = product.getTotalReviewCount();
+            commentTitle.setText("Customer Reviews  (" + newCount + ")");
+            updateMainCardReviewCount(newCount);
+
+            // Update rating di main card
+            updateMainCardRating();
+
+            DataService.updateProductReviewsInCache(product);
+
         });
 
         HBox submitRow = new HBox();
@@ -467,6 +486,64 @@ public class ProductDetailPage {
         commentCard.getChildren().addAll(commentTitle, commentSep, inputBox, commentsListBox);
         section.getChildren().addAll(descCard, commentCard);
         return section;
+    }
+
+    private void showWarningPopup(String message) {
+        javafx.stage.Stage popup = new javafx.stage.Stage();
+        popup.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+        popup.initStyle(javafx.stage.StageStyle.TRANSPARENT);
+
+        VBox root = new VBox(16);
+        root.setAlignment(Pos.CENTER);
+        root.setStyle(
+                "-fx-background-color: white; -fx-background-radius: 20;" +
+                        "-fx-border-color: #C4A484; -fx-border-width: 1.5; -fx-border-radius: 20;" +
+                        "-fx-padding: 32 40;"
+        );
+        root.setEffect(new DropShadow(18, Color.rgb(0, 0, 0, 0.15)));
+
+        Label icon = new Label("⚠️");
+        icon.setStyle("-fx-font-size: 38px;");
+
+        Label msg = new Label(message);
+        msg.setStyle("-fx-font-size: 13px; -fx-text-fill: #5D4037; -fx-text-alignment: center;");
+        msg.setWrapText(true);
+        msg.setMaxWidth(280);
+        msg.setAlignment(Pos.CENTER);
+
+        Button okBtn = new Button("OK");
+        okBtn.setStyle(
+                "-fx-background-color: #3E2723; -fx-text-fill: #D4A853;" +
+                        "-fx-font-size: 13px; -fx-font-weight: bold;" +
+                        "-fx-background-radius: 25; -fx-padding: 10 36; -fx-cursor: hand;"
+        );
+        okBtn.setOnMouseEntered(e -> okBtn.setStyle("-fx-background-color: #D4A853; -fx-text-fill: #2C1810; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 25; -fx-padding: 10 36; -fx-cursor: hand;"));
+        okBtn.setOnMouseExited(e -> okBtn.setStyle("-fx-background-color: #3E2723; -fx-text-fill: #D4A853; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 25; -fx-padding: 10 36; -fx-cursor: hand;"));
+        okBtn.setOnAction(e -> popup.close());
+
+        root.getChildren().addAll(icon, msg, okBtn);
+
+        Scene scene = new Scene(root);
+        scene.setFill(Color.TRANSPARENT);
+        popup.setScene(scene);
+        popup.sizeToScene();
+        popup.centerOnScreen();
+        popup.showAndWait();
+    }
+
+    private void updateMainCardRating() {
+        if (mainCardStars != null) {
+            mainCardStars.setText(product.getStarString());
+        }
+        if (mainCardRatingNum != null) {
+            mainCardRatingNum.setText(String.format("%.1f", product.getAverageRating()));
+        }
+    }
+
+    private void updateMainCardReviewCount(int newCount) {
+        if (mainCardReviewCount != null) {
+            mainCardReviewCount.setText("(" + newCount + " reviews)");
+        }
     }
 
     private VBox buildCommentItem(String author, String text, String time, String stars) {
@@ -510,12 +587,6 @@ public class ProductDetailPage {
         val.setWrapText(true);
         grid.add(lbl, 0, rowIndex);
         grid.add(val, 1, rowIndex);
-    }
-
-    private void updateMainCardReviewCount(int newCount) {
-        if (mainCardReviewCount != null) {
-            mainCardReviewCount.setText("(" + newCount + " reviews)");
-        }
     }
 
     private void showSuccess(String message) {
